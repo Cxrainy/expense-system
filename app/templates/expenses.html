@@ -684,6 +684,8 @@
                 // 验证文件上传
                 if (selectedFiles.length === 0) {
                     utils.showMessage('请上传报销凭证', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                     return;
                 }
                 
@@ -711,20 +713,37 @@
                 const expense_date = formData.get('expense_date');
                 const description = formData.get('description');
                 
+                // 调试信息
+                console.log('验证字段:', {
+                    title: title,
+                    category: category,
+                    amount: amount,
+                    currency: currency,
+                    exchangeRate: exchangeRate,
+                    expense_date: expense_date,
+                    description: description
+                });
+                
                 if (!title || !category || !amount || !currency || !exchangeRate || !expense_date || !description) {
                     utils.showMessage('请填写所有必填字段（包括费用说明）', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                     return;
                 }
                 
                 // 验证备注长度
                 if (description.trim().length < 5) {
                     utils.showMessage('费用说明至少需要5个字符', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                     return;
                 }
                 
                 // 验证汇率
                 if (parseFloat(exchangeRate) <= 0) {
                     utils.showMessage('汇率必须大于0', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                     return;
                 }
 
