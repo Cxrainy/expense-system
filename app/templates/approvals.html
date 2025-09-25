@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pagination.css') }}">
 </head>
 <body class="dashboard-page">
     <!-- 侧边栏 -->
@@ -220,6 +221,9 @@
                     </div>
                 </div>
 
+                <!-- 分页容器 -->
+                <div id="approvalsPagination"></div>
+
                 <!-- 空状态 -->
                 <div id="emptyApprovals" class="empty-state hidden">
                     <div class="empty-icon">✅</div>
@@ -262,12 +266,14 @@
     <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
     <script src="{{ url_for('static', filename='js/advanced-filters.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
     <script>
         let currentStatus = 'pending';
         let approvals = [];
         let filteredApprovals = [];
         let currentExpenseId = null;
         let advancedFilters = null;
+        let approvalsPagination; // 分页管理器
 
         // 侧边栏切换
         function toggleSidebar() {
@@ -470,8 +476,8 @@
             updateStats();
         }
 
-        // 加载审批数据
-        async function loadApprovals() {
+        // 加载审批数据 - 支持分页
+        async function loadApprovals(paginationParams = null) {
             const list = document.getElementById('approvalsList');
             const emptyState = document.getElementById('emptyApprovals');
             
@@ -479,23 +485,63 @@
             emptyState.classList.add('hidden');
             
             try {
-                // 加载所有数据，不再按状态筛选
-                approvals = await api.get('/api/expenses');
+                let url = '/api/expenses';
+                
+                // 添加分页参数
+                if (paginationParams) {
+                    url += `?page=${paginationParams.page}&per_page=${paginationParams.perPage}`;
+                }
+                
+                const response = await api.get(url);
+                
+                // 判断响应格式：新的分页格式 vs 旧的数组格式
+                if (response.data && response.pagination) {
+                    // 新的分页格式
+                    approvals = response.data;
+                    
+                    // 更新分页UI
+                    if (!approvalsPagination) {
+                        // 初始化分页管理器
+                        approvalsPagination = new PaginationManager('approvalsPagination', {
+                            perPage: 20,
+                            onPageChange: (params) => {
+                                console.log('📄 审批页面变更:', params);
+                                loadApprovals(params);
+                            }
+                        });
+                    }
+                    approvalsPagination.update(response.pagination);
+                } else {
+                    // 向后兼容旧格式
+                    approvals = response;
+                    // 隐藏分页UI
+                    if (approvalsPagination) {
+                        approvalsPagination.reset();
+                    }
+                }
+                
                 filteredApprovals = approvals;
                 
                 if (approvals.length === 0) {
                     list.innerHTML = '';
                     emptyState.classList.remove('hidden');
+                    // 隐藏分页
+                    if (approvalsPagination) {
+                        approvalsPagination.reset();
+                    }
                 } else {
                     renderApprovals(approvals);
                     emptyState.classList.add('hidden');
                 }
                 
-                // 加载筛选选项数据
-                loadFilterOptions();
+                // 加载筛选选项数据（只在首次加载时）
+                if (!paginationParams) {
+                    loadFilterOptions();
+                }
                 
                 updateStats();
             } catch (error) {
+                console.error('加载审批数据失败:', error);
                 list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>加载失败</h3><p>无法加载审批数据，请稍后重试</p><button class="btn btn-primary btn-sm" onclick="loadApprovals()">重试</button></div>';
             }
         }
