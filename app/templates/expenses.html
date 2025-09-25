@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报销申请 - 报销管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+</head>
+<body class="dashboard-page">
+    <!-- 侧边栏 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">报销管理系统</h2>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9,22 9,12 15,12 15,22"/>
+                        </svg>
+                        <span class="nav-text">仪表板</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/expenses" class="nav-link active">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="nav-text">报销申请</span>
+                    </a>
+                </li>
+                {% if session.role == 'admin' %}
+                <li class="nav-item">
+                    <a href="/approvals" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                        <span class="nav-text">审批管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/reports" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <path d="M9 9h6v6H9z"/>
+                            <path d="M9 1v2"/>
+                            <path d="M15 1v2"/>
+                            <path d="M9 21v2"/>
+                            <path d="M15 21v2"/>
+                            <path d="M1 9h2"/>
+                            <path d="M1 15h2"/>
+                            <path d="M21 9h2"/>
+                            <path d="M21 15h2"/>
+                        </svg>
+                        <span class="nav-text">报表导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link">
+                       <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-text">系统管理</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 移动端侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部导航栏 -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="topbar-right">
+                <button class="notification-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+                
+                <div class="divider"></div>
+                
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        <span>{{ session.username[0] if session.username else 'U' }}</span>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-info">
+                            <p class="user-name">{{ session.username or '用户' }}</p>
+                            <p class="user-email">{{ session.role or 'employee' }}</p>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            个人资料
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16,17 21,12 16,7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="page-content">
+            <div class="content-header">
+                <div class="header-left">
+                    <h1 class="page-title">报销申请</h1>
+                    <p class="page-subtitle">管理您的报销申请和查看申请状态</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showNewExpenseModal()">
+                        新建申请
+                    </button>
+                </div>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon text-blue">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalExpenses">0</div>
+                        <div class="stat-title">总申请数</div>
+                        <p class="stat-change">全部记录</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon text-orange">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="pendingExpenses">0</div>
+                        <div class="stat-title">待审批</div>
+                        <p class="stat-change">需要审批</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon text-green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="approvedExpenses">0</div>
+                        <div class="stat-title">已通过</div>
+                        <p class="stat-change">已完成审批</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 高级筛选 -->
+            <div id="advancedFilters"></div>
+
+            <!-- 报销申请列表 -->
+            <div class="list-container">
+                <div class="list-header">
+                    <div class="filters-summary" id="filtersSummary">
+                        <span>显示 <span class="filters-count" id="resultsCount">0</span> 条结果</span>
+                    </div>
+                    <div class="sort-options">
+                        <select id="sortBy" onchange="loadExpenses()">
+                            <option value="created_at">按申请时间</option>
+                            <option value="amount">按金额大小</option>
+                            <option value="title">按标题</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="list-items" id="expensesList">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <span>加载中...</span>
+                    </div>
+                </div>
+
+                <!-- 空状态 -->
+                <div id="emptyExpenses" class="empty-state hidden">
+                    <div class="empty-icon">📝</div>
+                    <h3>暂无报销申请</h3>
+                    <p>您还没有创建任何报销申请，点击上方按钮创建您的第一个申请</p>
+                    <button class="btn btn-primary" onclick="showNewExpenseModal()">创建申请</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新建申请模态框 -->
+    <div class="modal" id="newExpenseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">新建报销申请</h3>
+                <button class="modal-close" onclick="closeNewExpenseModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="newExpenseForm">
+                    <div class="form-group">
+                        <label for="expenseTitle" class="form-label">申请标题</label>
+                        <input type="text" id="expenseTitle" class="form-input" placeholder="请输入申请标题" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expenseCategory" class="form-label">费用类型</label>
+                            <select id="expenseCategory" class="form-select" required>
+                                <option value="">请选择</option>
+                                <!-- 动态加载分类选项 -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="expenseCurrency" class="form-label">货币类型</label>
+                            <select id="expenseCurrency" class="form-select" required onchange="handleCurrencyChange(false)">
+                                <option value="">请选择</option>
+                                <!-- 动态加载货币选项 -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expenseAmount" class="form-label">报销金额</label>
+                            <div class="input-group">
+                                <input type="number" id="expenseAmount" class="form-input" placeholder="0.00" step="0.01" min="0" required onchange="calculateUsdAmount()">
+                                <span class="input-addon" id="currencySymbol">CNY</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exchangeRate" class="form-label">
+                                汇率 
+                                <span class="form-hint">(多少单位货币=1美元)</span>
+                            </label>
+                            <input type="number" id="exchangeRate" class="form-input" placeholder="1.0000" step="0.0001" min="0.0001" value="1.0000" required onchange="calculateUsdAmount()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="currency-conversion" id="currencyConversion">
+                            <div class="conversion-info">
+                                <span class="conversion-label">美元金额：</span>
+                                <span class="conversion-amount" id="usdAmount">$ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expenseDate" class="form-label">费用发生日期</label>
+                        <input type="date" id="expenseDate" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expenseDescription" class="form-label">费用说明</label>
+                        <textarea id="expenseDescription" class="form-textarea" placeholder="请详细说明费用用途和详情" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expenseFiles" class="form-label">报销凭证 <span style="color: var(--destructive);">*</span></label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="expenseFiles" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx" class="file-input" required>
+                            <div class="file-upload-content">
+                                <svg class="file-upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17,8 12,3 7,8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                <p class="file-upload-text">点击或拖拽上传报销凭证</p>
+                                <p class="file-upload-hint">支持 PDF、图片、Word、Excel 等格式，最大 16MB</p>
+                            </div>
+                        </div>
+                        <div id="fileList" class="file-list"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeNewExpenseModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitExpense()" id="submitBtn">提交申请</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/file-preview.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/advanced-filters.js') }}"></script>
+    <script>
+        let currentStatus = 'all';
+        let currentCurrency = 'all'; // 货币筛选
+        let currentCategory = 'all'; // 新增：分类筛选
+        let expenses = [];
+        let filteredExpenses = []; // 新增：筛选后的数据
+        let selectedFiles = [];
+        let currentEditingId = null;
+        let advancedFilters; // 高级筛选组件
+
+        // 动态加载货币和分类选项
+        async function loadFormOptions() {
+            try {
+                // 加载货币选项
+                const currencies = await api.get('/api/currencies');
+                const currencySelect = document.getElementById('expenseCurrency');
+                
+                currencies.forEach(currency => {
+                    const option = document.createElement('option');
+                    option.value = currency.code;
+                    option.textContent = `${currency.name} (${currency.code})`;
+                    currencySelect.appendChild(option);
+                });
+
+                // 设置默认货币并触发汇率更新
+                currencySelect.value = 'CNY';
+                await handleCurrencyChange();
+
+                // 加载分类选项
+                const categories = await api.get('/api/categories');
+                const categorySelect = document.getElementById('expenseCategory');
+                
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.name;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('加载表单选项失败:', error);
+                utils.showMessage('加载表单选项失败', 'error');
+            }
+        }
+
+        // 文件上传相关函数
+        function initFileUpload() {
+            const fileInput = document.getElementById('expenseFiles');
+            const fileUploadArea = document.getElementById('fileUploadArea');
+            const fileList = document.getElementById('fileList');
+
+            // 文件选择事件
+            fileInput.addEventListener('change', function(e) {
+                handleFiles(e.target.files);
+            });
+
+            // 拖放事件
+            fileUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.add('dragover');
+            });
+
+            fileUploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+            });
+
+            fileUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        function handleFiles(files) {
+            const maxSize = 16 * 1024 * 1024; // 16MB
+            const allowedTypes = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'doc', 'docx', 'xls', 'xlsx'];
+
+            for (let file of files) {
+                if (file.size > maxSize) {
+                    utils.showMessage(`文件 ${file.name} 超过 16MB 限制`, 'error');
+                    continue;
+                }
+
+                const extension = file.name.split('.').pop().toLowerCase();
+                if (!allowedTypes.includes(extension)) {
+                    utils.showMessage(`文件 ${file.name} 格式不支持`, 'error');
+                    continue;
+                }
+
+                selectedFiles.push(file);
+            }
+
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            
+            if (selectedFiles.length === 0) {
+                fileList.innerHTML = '';
+                return;
+            }
+
+            const html = selectedFiles.map((file, index) => {
+                const size = formatFileSize(file.size);
+                const extension = file.name.split('.').pop().toLowerCase();
+                const iconClass = getFileIconClass(extension);
+
+                return `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <svg class="file-icon ${iconClass}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                ${getFileIconSVG(extension)}
+                            </svg>
+                            <div class="file-details">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-size">${size}</div>
+                            </div>
+                        </div>
+                        <button type="button" class="file-remove" onclick="removeFile(${index})">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            fileList.innerHTML = html;
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileIconClass(extension) {
+            if (['pdf'].includes(extension)) return 'pdf';
+            if (['png', 'jpg', 'jpeg', 'gif'].includes(extension)) return 'image';
+            if (['doc', 'docx'].includes(extension)) return 'document';
+            if (['xls', 'xlsx'].includes(extension)) return 'spreadsheet';
+            return 'document';
+        }
+
+        function getFileIconSVG(extension) {
+            if (['pdf'].includes(extension)) {
+                return '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>';
+            }
+            if (['png', 'jpg', 'jpeg', 'gif'].includes(extension)) {
+                return '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/>';
+            }
+            return '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>';
+        }
+
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            }
+        }
+        
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 货币相关函数
+        const currencySymbols = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+            'KRW': '₩',
+            'HKD': 'HK$',
+            'SGD': 'S$',
+            'AUD': 'A$',
+            'CAD': 'C$'
+        };
+
+        // 修改handleCurrencyChange函数以自动填充默认汇率
+        async function handleCurrencyChange(preserveExistingRate = false) {
+            const currencySelect = document.getElementById('expenseCurrency');
+            const currencySymbol = document.getElementById('currencySymbol');
+            const exchangeRateInput = document.getElementById('exchangeRate');
+            const selectedCurrency = currencySelect.value;
+            
+            // 更新货币符号
+            currencySymbol.textContent = selectedCurrency;
+            
+            // 启用汇率输入框（允许用户修改）
+            exchangeRateInput.disabled = false;
+            
+            // 获取并设置该货币的默认汇率
+            if (selectedCurrency) {
+                try {
+                    const currencies = await api.get('/api/currencies');
+                    const selectedCurrencyData = currencies.find(currency => currency.code === selectedCurrency);
+                    
+                    if (selectedCurrency === 'USD') {
+                        // 美元汇率始终为1且不可修改
+                        exchangeRateInput.value = '1.0000';
+                        exchangeRateInput.disabled = true;
+                    } else {
+                        // 对于其他货币，启用编辑
+                        exchangeRateInput.disabled = false;
+                        
+                        // 只有在不保留现有汇率时才设置默认值
+                        if (!preserveExistingRate) {
+                            if (selectedCurrencyData) {
+                                // 设置系统默认汇率，但允许用户修改
+                                exchangeRateInput.value = parseFloat(selectedCurrencyData.exchange_rate).toFixed(4);
+                            } else {
+                                // 如果没有找到对应货币，清空汇率让用户填入
+                                exchangeRateInput.value = '';
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('获取货币汇率失败:', error);
+                    // 如果API调用失败，设置合理的默认值
+                    if (selectedCurrency === 'USD') {
+                        exchangeRateInput.value = '1.0000';
+                        exchangeRateInput.disabled = true;
+                    } else if (!preserveExistingRate) {
+                        exchangeRateInput.value = '';
+                        utils.showMessage('获取汇率失败，请手动输入', 'warning');
+                    }
+                }
+            } else {
+                // 如果没有选择货币，清空汇率
+                if (!preserveExistingRate) {
+                    exchangeRateInput.value = '';
+                }
+            }
+            
+            calculateUsdAmount();
+        }
+
+        function calculateUsdAmount() {
+            const amountInput = document.getElementById('expenseAmount');
+            const exchangeRateInput = document.getElementById('exchangeRate');
+            const usdAmountDisplay = document.getElementById('usdAmount');
+            const currencySelect = document.getElementById('expenseCurrency');
+            
+            const amount = parseFloat(amountInput.value) || 0;
+            const exchangeRate = parseFloat(exchangeRateInput.value) || 0;
+            const currency = currencySelect.value;
+            
+            if (amount > 0 && exchangeRate > 0) {
+                let usdAmount = 0;
+                if (currency === 'USD') {
+                    usdAmount = amount;
+                } else {
+                    // 新的汇率计算逻辑：多少单位货币兑换1美元
+                    usdAmount = amount / exchangeRate;
+                }
+                
+                // 显示原币种金额
+                const currencySymbol = currencySymbols[currency] || currency;
+                const originalAmount = `${currencySymbol} ${amount.toFixed(2)}`;
+                
+                if (currency === 'USD') {
+                    usdAmountDisplay.innerHTML = `
+                        <span style="font-size: 18px; font-weight: 700;">$ ${usdAmount.toFixed(2)}</span>
+                    `;
+                } else {
+                    usdAmountDisplay.innerHTML = `
+                        <span style="color: var(--muted-foreground); font-size: 14px;">${originalAmount} × ${exchangeRate} =</span><br>
+                        <span style="font-size: 18px; font-weight: 700;">$ ${usdAmount.toFixed(2)}</span>
+                    `;
+                }
+            } else {
+                usdAmountDisplay.textContent = '$ 0.00';
+            }
+        }
+
+        // 显示新建申请模态框
+        function showNewExpenseModal() {
+            const modal = document.getElementById('newExpenseModal');
+            modal.classList.add('show');
+            
+            // 设置默认日期为今天
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        // 关闭新建申请模态框
+        function closeNewExpenseModal() {
+            const modal = document.getElementById('newExpenseModal');
+            modal.classList.remove('show');
+            document.getElementById('newExpenseForm').reset();
+            selectedFiles = [];
+            updateFileList();
+            
+            // 重置编辑状态
+            currentEditingId = null;
+            document.querySelector('#newExpenseModal .modal-title').textContent = '新建报销申请';
+            document.getElementById('submitBtn').textContent = '提交申请';
+            
+            // 清除 URL 参数
+            const url = new URL(window.location);
+            url.searchParams.delete('edit');
+            window.history.replaceState({}, '', url);
+            
+            // 重置货币设置到默认值
+            document.getElementById('expenseCurrency').value = 'CNY';
+            document.getElementById('currencySymbol').textContent = 'CNY';
+            document.getElementById('usdAmount').textContent = '$ 0.00';
+            
+            // 重新调用handleCurrencyChange来设置正确的汇率
+            handleCurrencyChange();
+            
+            // 移除编辑提示
+            const notice = document.querySelector('#newExpenseModal .edit-notice');
+            if (notice) {
+                notice.remove();
+            }
+        }
+
+        // 提交报销申请
+        async function submitExpense() {
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="loading-spinner"></div> 提交中...';
+                
+                // 验证文件上传
+                if (selectedFiles.length === 0) {
+                    utils.showMessage('请上传报销凭证', 'error');
+                    return;
+                }
+                
+                // 创建 FormData 对象
+                const formData = new FormData();
+                formData.append('title', document.getElementById('expenseTitle').value);
+                formData.append('category', document.getElementById('expenseCategory').value);
+                formData.append('amount', document.getElementById('expenseAmount').value);
+                formData.append('currency', document.getElementById('expenseCurrency').value);
+                formData.append('exchange_rate', document.getElementById('exchangeRate').value);
+                formData.append('expense_date', document.getElementById('expenseDate').value);
+                formData.append('description', document.getElementById('expenseDescription').value);
+                
+                // 添加文件
+                selectedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+
+                // 表单验证
+                const title = formData.get('title');
+                const category = formData.get('category');
+                const amount = formData.get('amount');
+                const currency = formData.get('currency');
+                const exchangeRate = formData.get('exchange_rate');
+                const expense_date = formData.get('expense_date');
+                
+                if (!title || !category || !amount || !currency || !exchangeRate || !expense_date) {
+                    utils.showMessage('请填写所有必填字段', 'error');
+                    return;
+                }
+                
+                // 验证汇率
+                if (parseFloat(exchangeRate) <= 0) {
+                    utils.showMessage('汇率必须大于0', 'error');
+                    return;
+                }
+
+                // 根据是否为编辑模式选择不同的API端点
+                let url, method;
+                if (currentEditingId) {
+                    url = `/api/expenses/${currentEditingId}`;
+                    method = 'PUT';
+                    submitBtn.innerHTML = '<div class="loading-spinner"></div> 保存中...';
+                } else {
+                    url = '/api/expenses';
+                    method = 'POST';
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (currentEditingId) {
+                        utils.showMessage(result.message || '报销申请已更新！', 'success');
+                    } else {
+                        utils.showMessage(`报销申请提交成功！已上传 ${result.files_count} 个文件`, 'success');
+                    }
+                    closeNewExpenseModal();
+                    loadExpenses();
+                    updateStats();
+                } else {
+                    utils.showMessage(result.error || '操作失败', 'error');
+                }
+            } catch (error) {
+                console.error('提交失败:', error);
+                utils.showMessage('网络错误，请稍后重试', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
+
+        // 初始化高级筛选
+        function initAdvancedFilters() {
+            advancedFilters = new AdvancedFilters('advancedFilters', {
+                title: '报销申请筛选',
+                collapsed: false,
+                showQuickFilters: true,
+                showSearch: true,
+                showSavedFilters: true,
+                fields: [
+                    {
+                        key: 'status',
+                        label: '审批状态',
+                        type: 'select',
+                        options: [
+                            { value: 'pending', label: '待审批' },
+                            { value: 'approved', label: '已通过' },
+                            { value: 'rejected', label: '已拒绝' }
+                        ]
+                    },
+                    {
+                        key: 'category',
+                        label: '费用类型',
+                        type: 'select',
+                        options: [] // 将通过 loadCategories 填充
+                    },
+                    {
+                        key: 'currency',
+                        label: '货币类型',
+                        type: 'select',
+                        options: [] // 将通过 loadCurrencies 填充
+                    },
+                    {
+                        key: 'amount',
+                        label: '金额范围',
+                        type: 'amountRange'
+                    },
+                    {
+                        key: 'expense_date',
+                        label: '费用日期',
+                        type: 'dateRange'
+                    },
+                    {
+                        key: 'created_at',
+                        label: '申请日期',
+                        type: 'dateRange'
+                    }
+                ],
+                quickFilters: [
+                    {
+                        key: 'today',
+                        label: '今日申请',
+                        filters: {
+                            created_at_start: new Date().toISOString().split('T')[0],
+                            created_at_end: new Date().toISOString().split('T')[0]
+                        }
+                    },
+                    {
+                        key: 'week',
+                        label: '本周申请',
+                        filters: {
+                            created_at_start: getWeekStart().toISOString().split('T')[0],
+                            created_at_end: new Date().toISOString().split('T')[0]
+                        }
+                    },
+                    {
+                        key: 'month',
+                        label: '本月申请',
+                        filters: {
+                            created_at_start: getMonthStart().toISOString().split('T')[0],
+                            created_at_end: new Date().toISOString().split('T')[0]
+                        }
+                    },
+                    {
+                        key: 'pending',
+                        label: '待审批',
+                        filters: { status: 'pending' }
+                    },
+                    {
+                        key: 'high_amount',
+                        label: '高金额 (>1000元)',
+                        filters: { amount_min: '1000' }
+                    }
+                ],
+                onFilterChange: (filters) => {
+                    console.log('筛选条件变化:', filters);
+                    applyAdvancedFilters(filters);
+                },
+                onSearch: (query) => {
+                    console.log('搜索:', query);
+                }
+            });
+            
+            // 加载分类和货币选项
+            loadFilterOptions();
+        }
+        
+        // 加载筛选选项
+        async function loadFilterOptions() {
+            try {
+                // 保存当前的筛选条件
+                const currentFilters = advancedFilters ? advancedFilters.getFilters() : {};
+                
+                // 加载分类
+                const categories = await api.get('/api/admin/categories');
+                const categoryField = advancedFilters.config.fields.find(f => f.key === 'category');
+                if (categoryField) {
+                    categoryField.options = categories.map(cat => ({
+                        value: cat.name,
+                        label: cat.name
+                    }));
+                }
+                
+                // 加载货币
+                const currencies = await api.get('/api/admin/currencies');
+                const currencyField = advancedFilters.config.fields.find(f => f.key === 'currency');
+                if (currencyField) {
+                    currencyField.options = currencies.map(currency => ({
+                        value: currency.code,
+                        label: `${currency.name} (${currency.symbol})`
+                    }));
+                }
+                
+                // 重新渲染筛选器
+                advancedFilters.render();
+                advancedFilters.bindEvents();
+                
+                // 先恢复已有筛选（如用户操作后刷新）
+                if (Object.keys(currentFilters).length > 0) {
+                    advancedFilters.setFilters(currentFilters);
+                } else {
+                    // 首次加载：从URL参数初始化筛选，确保选项加载完成后再应用
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlFilters = {};
+                    urlParams.forEach((value, key) => {
+                        if (value) urlFilters[key] = value;
+                    });
+                    if (Object.keys(urlFilters).length > 0) {
+                        advancedFilters.setFilters(urlFilters);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('加载筛选选项失败:', error);
+            }
+        }
+        
+        // 应用高级筛选
+        function applyAdvancedFilters(filters) {
+            console.log('开始应用筛选:', filters);
+            
+            filteredExpenses = expenses.filter(expense => {
+                // 状态筛选
+                if (filters.status && expense.status !== filters.status) {
+                    return false;
+                }
+                
+                // 分类筛选
+                if (filters.category && expense.category !== filters.category) {
+                    return false;
+                }
+                
+                // 货币筛选
+                if (filters.currency && expense.currency !== filters.currency) {
+                    return false;
+                }
+                
+                // 金额范围筛选
+                if (filters.amount_min && parseFloat(expense.amount) < parseFloat(filters.amount_min)) {
+                    return false;
+                }
+                if (filters.amount_max && parseFloat(expense.amount) > parseFloat(filters.amount_max)) {
+                    return false;
+                }
+                
+                // 费用日期筛选
+                if (filters.expense_date_start && expense.expense_date < filters.expense_date_start) {
+                    return false;
+                }
+                if (filters.expense_date_end && expense.expense_date > filters.expense_date_end) {
+                    return false;
+                }
+                
+                // 申请日期筛选
+                if (filters.created_at_start) {
+                    const expenseDate = new Date(expense.created_at).toISOString().split('T')[0];
+                    if (expenseDate < filters.created_at_start) {
+                        return false;
+                    }
+                }
+                if (filters.created_at_end) {
+                    const expenseDate = new Date(expense.created_at).toISOString().split('T')[0];
+                    if (expenseDate > filters.created_at_end) {
+                        return false;
+                    }
+                }
+                
+                // 搜索筛选
+                if (filters.search) {
+                    const searchTerm = filters.search.toLowerCase();
+                    const searchableText = [
+                        expense.title,
+                        expense.description || '',
+                        expense.submitter || '',
+                        expense.category
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchableText.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            console.log('筛选后的数据:', filteredExpenses);
+            renderExpenses(filteredExpenses);
+            updateResultsCount(filteredExpenses.length);
+        }
+        
+        // 更新结果数量
+        function updateResultsCount(count) {
+            const resultsCountEl = document.getElementById('resultsCount');
+            if (resultsCountEl) {
+                resultsCountEl.textContent = count;
+            }
+        }
+        
+        // 获取本周开始日期
+        function getWeekStart() {
+            const today = new Date();
+            const day = today.getDay();
+            const diff = today.getDate() - day + (day === 0 ? -6 : 1); // 周一为一周的开始
+            return new Date(today.setDate(diff));
+        }
+        
+        // 获取本月开始日期
+        function getMonthStart() {
+            const today = new Date();
+            return new Date(today.getFullYear(), today.getMonth(), 1);
+        }
+
+        // 切换标签页
+        function switchTab(status) {
+            currentStatus = status;
+            
+            // 更新标签页样式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-status="${status}"]`).classList.add('active');
+            
+            loadExpenses();
+        }
+
+        // 加载报销数据
+        async function loadExpenses() {
+            const list = document.getElementById('expensesList');
+            const emptyState = document.getElementById('emptyExpenses');
+            
+            list.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>加载中...</span></div>';
+            emptyState.classList.add('hidden');
+            
+            try {
+                // 加载所有数据
+                expenses = await api.get('/api/expenses?status=all');
+                
+                // 如果存在筛选条件，优先应用筛选，避免被“显示全部”覆盖
+                if (advancedFilters && Object.keys(advancedFilters.getFilters()).length > 0) {
+                    applyAdvancedFilters(advancedFilters.getFilters());
+                    updateStats();
+                    return;
+                }
+                
+                // 初始化时显示所有数据
+                filteredExpenses = expenses;
+                
+                if (expenses.length === 0) {
+                    list.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                } else {
+                    renderExpenses(filteredExpenses);
+                    emptyState.classList.add('hidden');
+                }
+                
+                updateStats();
+                updateResultsCount(filteredExpenses.length);
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>加载失败</h3><p>无法加载报销数据，请稍后重试</p><button class="btn btn-primary btn-sm" onclick="loadExpenses()">重试</button></div>';
+            }
+        }
+
+        // 渲染报销列表
+        function renderExpenses(data) {
+            const list = document.getElementById('expensesList');
+            
+            const html = data.map(expense => `
+                <div class="list-item animate-fadeIn">
+                    <div class="item-checkbox">
+                        <input type="checkbox" value="${expense.id}" class="expense-select">
+                    </div>
+                    <div class="item-info">
+                        <h4 class="item-title">${expense.title}</h4>
+                        <div class="item-meta">
+                            <span>类型：${expense.category}</span>
+                            <span>申请人：${expense.submitter}</span>
+                            <span>时间：${utils.formatDate(expense.created_at)}</span>
+                            <span class="files-info">📁 ${expense.files ? expense.files.length : 0} 个附件</span>
+                        </div>
+                        <p class="item-description">${expense.description || '无详细说明'}</p>
+                    </div>
+                    <div class="item-amount">
+                        <div class="amount-display">
+                            <span class="amount">${utils.formatMultiCurrencyAmount(expense.amount, expense.currency, expense.usd_amount)}</span>
+                            ${expense.currency !== 'CNY' ? `<span class="exchange-info">汇率: ${expense.exchange_rate}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="item-status">
+                        <span class="badge ${utils.getStatusClass(expense.status)}">${utils.getStatusText(expense.status)}</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="viewExpense(${expense.id})">查看</button>
+                        ${expense.status === 'pending' || expense.status === 'rejected' ? 
+                            `<button class="btn btn-primary btn-sm" onclick="editExpense(${expense.id})">编辑</button>` : ''}
+                        ${expense.status === 'pending' ? 
+                             `<button class="btn btn-destructive btn-sm" onclick="deleteExpense(${expense.id})">删除</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            list.innerHTML = html;
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            api.get('/api/stats').then(stats => {
+                document.getElementById('totalExpenses').textContent = stats.total;
+                document.getElementById('pendingExpenses').textContent = stats.pending;
+                document.getElementById('approvedExpenses').textContent = stats.approved;
+                
+                // 更新标签页计数
+                document.getElementById('allCount').textContent = stats.total;
+                document.getElementById('pendingCount').textContent = stats.pending;
+                document.getElementById('approvedCount').textContent = stats.approved;
+                document.getElementById('rejectedCount').textContent = stats.rejected;
+            });
+        }
+
+        // 查看报销详情
+        function viewExpense(id) {
+            window.location.href = `/expense/${id}`;
+        }
+
+        // 删除报销申请
+        async function deleteExpense(id) {
+            if (!await utils.confirm('确定要删除这个报销申请吗？删除后将无法恢复。')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/expenses/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    utils.showMessage('报销申请已删除', 'success');
+                    loadExpenses(); // 重新加载列表
+                    updateStats(); // 更新统计
+                } else {
+                    utils.showMessage(result.error || '删除失败', 'error');
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                utils.showMessage('网络错误，请稍后重试', 'error');
+            }
+        }
+        
+        // 编辑报销申请
+        
+        async function editExpense(id) {
+            try {
+                // 获取现有的报销数据
+                const response = await fetch(`/api/expenses?status=all`);
+                const expenses = await response.json();
+                const expense = expenses.find(e => e.id === id);
+                
+                if (!expense) {
+                    utils.showMessage('未找到报销申请', 'error');
+                    return;
+                }
+                
+                // 填充表单数据
+                document.getElementById('expenseTitle').value = expense.title;
+                document.getElementById('expenseCategory').value = expense.category;
+                document.getElementById('expenseAmount').value = expense.amount;
+                document.getElementById('expenseDate').value = expense.expense_date;
+                document.getElementById('expenseDescription').value = expense.description || '';
+                
+                // 清空文件列表（需要重新上传）
+                selectedFiles = [];
+                updateFileList();
+                
+                // 设置编辑模式
+                currentEditingId = id;
+                document.querySelector('#newExpenseModal .modal-title').textContent = '编辑报销申请';
+                document.getElementById('submitBtn').textContent = '保存修改';
+                
+                // 显示模态框
+                showNewExpenseModal();
+                
+                // 显示提示信息
+                const modalBody = document.querySelector('#newExpenseModal .modal-body');
+                const existingNotice = modalBody.querySelector('.edit-notice');
+                if (!existingNotice) {
+                    const notice = document.createElement('div');
+                    notice.className = 'alert alert-info edit-notice';
+                    notice.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 12px; background: #e0f2fe; border: 1px solid #b3e5fc; border-radius: 6px; margin-bottom: 16px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0288d1" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 16v-4"/>
+                                <path d="M12 8h.01"/>
+                            </svg>
+                            <span style="color: #0277bd; font-size: 14px;">编辑后将重新发起申请，状态重置为“待审批”，需要重新上传报销凭证。</span>
+                        </div>
+                    `;
+                    modalBody.insertBefore(notice, modalBody.firstChild);
+                }
+                
+            } catch (error) {
+                console.error('加载报销数据失败:', error);
+                utils.showMessage('加载数据失败，请稍后重试', 'error');
+            }
+        }
+
+        // 全选功能
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.expense-select');
+            
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+        }
+
+        // 加载报销数据用于编辑
+        async function loadExpenseForEdit(expenseId) {
+            try {
+                // 获取现有的报销数据
+                const response = await fetch(`/api/expenses?status=all`);
+                if (!response.ok) {
+                    throw new Error('Failed to load expenses');
+                }
+                
+                const expenses = await response.json();
+                const expense = expenses.find(e => e.id === expenseId);
+                
+                if (!expense) {
+                    utils.showMessage('未找到报销申请', 'error');
+                    return;
+                }
+                
+                // 检查是否可以编辑（只能编辑待审批或已拒绝的申请）
+                if (expense.status !== 'pending' && expense.status !== 'rejected') {
+                    utils.showMessage('只能编辑待审批或已拒绝的申请', 'error');
+                    return;
+                }
+                
+                // 检查是否是申请人本人（后端会再次验证）
+                
+                // 预填充表单数据
+                document.getElementById('expenseTitle').value = expense.title;
+                document.getElementById('expenseCategory').value = expense.category;
+                document.getElementById('expenseAmount').value = expense.amount;
+                document.getElementById('expenseCurrency').value = expense.currency;
+                document.getElementById('exchangeRate').value = expense.exchange_rate;
+                document.getElementById('expenseDate').value = expense.expense_date;
+                document.getElementById('expenseDescription').value = expense.description || '';
+                
+                // 处理货币相关的设置（保留现有汇率）
+                handleCurrencyChange(true);
+                calculateUsdAmount();
+                
+                // 清空文件列表（需要重新上传）
+                selectedFiles = [];
+                updateFileList();
+                
+                // 设置编辑模式
+                currentEditingId = expenseId;
+                document.querySelector('#newExpenseModal .modal-title').textContent = '编辑报销申请';
+                document.getElementById('submitBtn').textContent = '保存修改';
+                
+                // 显示模态框
+                showNewExpenseModal();
+                
+                // 显示编辑提示信息
+                const modalBody = document.querySelector('#newExpenseModal .modal-body');
+                const existingNotice = modalBody.querySelector('.edit-notice');
+                if (!existingNotice) {
+                    const notice = document.createElement('div');
+                    notice.className = 'alert alert-info edit-notice';
+                    notice.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 12px; background: #e0f2fe; border: 1px solid #b3e5fc; border-radius: 6px; margin-bottom: 16px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0288d1" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 16v-4"/>
+                                <path d="M12 8h.01"/>
+                            </svg>
+                            <span style="color: #0277bd; font-size: 14px;">编辑后将重新发起申请，状态重置为“待审批”，需要重新上传报销凭证。</span>
+                        </div>
+                    `;
+                    modalBody.insertBefore(notice, modalBody.firstChild);
+                }
+                
+            } catch (error) {
+                console.error('加载报销数据失败:', error);
+                utils.showMessage('加载数据失败，请稍后重试', 'error');
+            }
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化高级筛选
+            initAdvancedFilters();
+            
+            // 检查 URL 参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const currencyParam = urlParams.get('currency');
+            const categoryParam = urlParams.get('category');
+            const editParam = urlParams.get('edit');
+            
+            // 移除延迟初始化，URL参数将在loadFilterOptions完成后统一应用
+            
+            // 如果有编辑参数，则进入编辑模式
+            if (editParam) {
+                loadExpenseForEdit(parseInt(editParam));
+            }
+            
+            loadFormOptions(); // 加载表单选项
+            initFileUpload();
+            loadExpenses();
+            
+            // 点击其他地方关闭用户菜单
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.user-menu')) {
+                    const dropdown = document.getElementById('userDropdown');
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // 点击模态框外部关闭
+            document.getElementById('newExpenseModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeNewExpenseModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

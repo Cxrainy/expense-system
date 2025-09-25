@@ -1,0 +1,17 @@
+# API路由重定向到Functions
+/api/* /.netlify/functions/api/:splat 200
+
+# SPA路由处理 - 确保前端路由正常工作
+/dashboard /dashboard.html 200
+/expenses /expenses.html 200
+/approvals /approvals.html 200
+/admin /admin.html 200
+/reports /reports.html 200
+/expense/:id /expense_detail.html 200
+/approval/:id /approval_detail.html 200
+
+# 根路径重定向
+/ /dashboard 302
+
+# 404页面
+/* /404.html 404

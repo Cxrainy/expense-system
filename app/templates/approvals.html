@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审批管理 - 报销管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+</head>
+<body class="dashboard-page">
+    <!-- 侧边栏 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">报销管理系统</h2>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9,22 9,12 15,12 15,22"/>
+                        </svg>
+                        <span class="nav-text">仪表板</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/expenses" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="nav-text">报销申请</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/approvals" class="nav-link active">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                        <span class="nav-text">审批管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/reports" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <path d="M9 9h6v6H9z"/>
+                            <path d="M9 1v2"/>
+                            <path d="M15 1v2"/>
+                            <path d="M9 21v2"/>
+                            <path d="M15 21v2"/>
+                            <path d="M1 9h2"/>
+                            <path d="M1 15h2"/>
+                            <path d="M21 9h2"/>
+                            <path d="M21 15h2"/>
+                        </svg>
+                        <span class="nav-text">报表导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-text">系统管理</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 移动端侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部导航栏 -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="topbar-right">
+                <button class="notification-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+                
+                <div class="divider"></div>
+                
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        <span>{{ session.username[0] if session.username else 'U' }}</span>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-info">
+                            <p class="user-name">{{ session.username or '用户' }}</p>
+                            <p class="user-email">{{ session.role or 'employee' }}</p>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            个人资料
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16,17 21,12 16,7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="page-content">
+            <div class="content-header">
+                <div class="header-left">
+                    <h1 class="page-title">审批管理</h1>
+                    <p class="page-subtitle">处理待审批的报销申请和查看审批历史</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="batchApprove()">
+                        批量通过
+                    </button>
+                </div>
+            </div>
+
+            <!-- 审批统计 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon text-orange">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="pendingApprovals">0</div>
+                        <div class="stat-title">待审批</div>
+                        <p class="stat-change">需要处理</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon text-green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="approvedToday">0</div>
+                        <div class="stat-title">今日已审批</div>
+                        <p class="stat-change">今日处理</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon text-blue">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="totalApprovals">0</div>
+                        <div class="stat-title">总审批数</div>
+                        <p class="stat-change">全部记录</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 高级筛选 -->
+            <div id="advancedFilters"></div>
+
+            <!-- 审批列表 -->
+            <div class="list-container">
+                <div class="list-header">
+                    <div class="batch-select">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        <label for="selectAll">全选</label>
+                    </div>
+                    <div class="sort-options">
+                        <select id="sortBy" onchange="loadApprovals()">
+                            <option value="created_at">按申请时间</option>
+                            <option value="amount">按金额大小</option>
+                            <option value="title">按标题</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="list-items" id="approvalsList">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <span>加载中...</span>
+                    </div>
+                </div>
+
+                <!-- 空状态 -->
+                <div id="emptyApprovals" class="empty-state hidden">
+                    <div class="empty-icon">✅</div>
+                    <h3>暂无审批项目</h3>
+                    <p>当前没有需要处理的审批申请</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 审批模态框 -->
+    <div class="modal" id="approvalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">审批申请</h3>
+                <button class="modal-close" onclick="closeApprovalModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="expenseDetails">
+                    <!-- 报销详情将通过JavaScript填充 -->
+                </div>
+                <div class="form-group">
+                    <label for="approvalComment" class="form-label">审批意见</label>
+                    <textarea id="approvalComment" class="form-textarea" rows="3" placeholder="请输入审批意见..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeApprovalModal()">取消</button>
+                <button class="btn btn-destructive" onclick="rejectExpense()" id="rejectBtn">拒绝</button>
+                <button class="btn btn-primary" onclick="approveExpense()" id="approveBtn">通过</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/advanced-filters.js') }}"></script>
+    <script>
+        let currentStatus = 'pending';
+        let approvals = [];
+        let filteredApprovals = [];
+        let currentExpenseId = null;
+        let advancedFilters = null;
+
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            }
+        }
+        
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 切换标签页（保留但不使用）
+        function switchTab(status) {
+            // 通过高级筛选的状态筛选来替代标签页功能
+            if (advancedFilters) {
+                advancedFilters.setFilterValue('status', status === 'all' ? '' : status);
+            }
+        }
+
+        // 初始化高级筛选
+        function initAdvancedFilters() {
+            advancedFilters = new AdvancedFilters('advancedFilters', {
+                title: '审批管理筛选',
+                collapsed: false,
+                showQuickFilters: true,
+                showSearch: true,
+                fields: [
+                    {
+                        key: 'status',
+                        label: '审批状态',
+                        type: 'select',
+                        options: [
+                            { value: '', label: '全部状态' },
+                            { value: 'pending', label: '待审批' },
+                            { value: 'approved', label: '已通过' },
+                            { value: 'rejected', label: '已拒绝' }
+                        ]
+                    },
+                    {
+                        key: 'category',
+                        label: '费用类型',
+                        type: 'select',
+                        options: [
+                            { value: '', label: '全部类型' }
+                        ]
+                    },
+                    {
+                        key: 'submitter',
+                        label: '申请人',
+                        type: 'select',
+                        options: [
+                            { value: '', label: '全部申请人' }
+                        ]
+                    },
+                    {
+                        key: 'currency',
+                        label: '货币类型',
+                        type: 'select',
+                        options: [
+                            { value: '', label: '全部货币' }
+                        ]
+                    },
+                    {
+                        key: 'amount',
+                        label: '金额范围（美元）',
+                        type: 'amountRange'
+                    },
+                    {
+                        key: 'date',
+                        label: '申请日期',
+                        type: 'dateRange'
+                    }
+                ],
+                quickFilters: [
+                    { label: '待审批', filters: { status: 'pending' } },
+                    { label: '已通过', filters: { status: 'approved' } },
+                    { label: '已拒绝', filters: { status: 'rejected' } },
+                    { label: '本周申请', filters: { date: 'thisWeek' } },
+                    { label: '大额申请', filters: { amount: { min: '1000' } } }
+                ],
+                onFilterChange: (filters) => {
+                    applyAdvancedFilters(filters);
+                }
+            });
+            
+            // 加载筛选选项数据
+            loadFilterOptions();
+        }
+
+        // 加载筛选选项数据
+        async function loadFilterOptions() {
+            try {
+                // 如果还没有加载审批数据，先加载
+                if (!approvals || approvals.length === 0) {
+                    return;
+                }
+                
+                // 获取唯一的分类
+                const categories = [...new Set(approvals.map(item => item.category))].filter(Boolean);
+                const categoryOptions = [{ value: '', label: '全部类型' }]
+                    .concat(categories.map(cat => ({ value: cat, label: cat })));
+                
+                // 获取唯一的申请人
+                const submitters = [...new Set(approvals.map(item => item.submitter))].filter(Boolean);
+                const submitterOptions = [{ value: '', label: '全部申请人' }]
+                    .concat(submitters.map(sub => ({ value: sub, label: sub })));
+                
+                // 获取唯一的货币
+                const currencies = [...new Set(approvals.map(item => item.currency))].filter(Boolean);
+                const currencyOptions = [{ value: '', label: '全部货币' }]
+                    .concat(currencies.map(cur => ({ value: cur, label: cur })));
+                
+                // 确保高级筛选器已初始化
+                if (advancedFilters) {
+                    // 更新筛选选项
+                    advancedFilters.updateFieldOptions('category', categoryOptions);
+                    advancedFilters.updateFieldOptions('submitter', submitterOptions);
+                    advancedFilters.updateFieldOptions('currency', currencyOptions);
+                }
+                
+            } catch (error) {
+                console.error('加载筛选选项失败:', error);
+            }
+        }
+
+        // 应用高级筛选
+        function applyAdvancedFilters(filters) {
+            filteredApprovals = approvals.filter(approval => {
+                // 状态筛选
+                if (filters.status && approval.status !== filters.status) {
+                    return false;
+                }
+                
+                // 分类筛选
+                if (filters.category && approval.category !== filters.category) {
+                    return false;
+                }
+                
+                // 申请人筛选
+                if (filters.submitter && approval.submitter !== filters.submitter) {
+                    return false;
+                }
+                
+                // 货币筛选
+                if (filters.currency && approval.currency !== filters.currency) {
+                    return false;
+                }
+                
+                // 金额范围筛选（使用美元金额）
+                if (filters.amount) {
+                    const usdAmount = parseFloat(approval.usd_amount);
+                    if (filters.amount.min !== undefined && usdAmount < parseFloat(filters.amount.min)) {
+                        return false;
+                    }
+                    if (filters.amount.max !== undefined && usdAmount > parseFloat(filters.amount.max)) {
+                        return false;
+                    }
+                }
+                
+                // 日期范围筛选
+                if (filters.date) {
+                    const approvalDate = new Date(approval.created_at);
+                    if (filters.date.start && approvalDate < new Date(filters.date.start)) {
+                        return false;
+                    }
+                    if (filters.date.end && approvalDate > new Date(filters.date.end + 'T23:59:59')) {
+                        return false;
+                    }
+                }
+                
+                // 搜索筛选
+                if (filters.search) {
+                    const searchTerm = filters.search.toLowerCase();
+                    const searchFields = [
+                        approval.title,
+                        approval.description,
+                        approval.category,
+                        approval.submitter
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    
+                    if (!searchFields.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            renderApprovals(filteredApprovals);
+            updateStats();
+        }
+
+        // 加载审批数据
+        async function loadApprovals() {
+            const list = document.getElementById('approvalsList');
+            const emptyState = document.getElementById('emptyApprovals');
+            
+            list.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><span>加载中...</span></div>';
+            emptyState.classList.add('hidden');
+            
+            try {
+                // 加载所有数据，不再按状态筛选
+                approvals = await api.get('/api/expenses');
+                filteredApprovals = approvals;
+                
+                if (approvals.length === 0) {
+                    list.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                } else {
+                    renderApprovals(approvals);
+                    emptyState.classList.add('hidden');
+                }
+                
+                // 加载筛选选项数据
+                loadFilterOptions();
+                
+                updateStats();
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>加载失败</h3><p>无法加载审批数据，请稍后重试</p><button class="btn btn-primary btn-sm" onclick="loadApprovals()">重试</button></div>';
+            }
+        }
+
+        // 渲染审批列表
+        function renderApprovals(data) {
+            const list = document.getElementById('approvalsList');
+            
+            const html = data.map(approval => {
+                const actionButtons = approval.status === 'pending' ? `
+                    <button class="btn btn-primary btn-sm" onclick="showApprovalModal(${approval.id})">审批</button>
+                ` : approval.status === 'approved' ? `
+                    <button class="btn btn-secondary btn-sm" onclick="viewDetails(${approval.id})">查看</button>
+                ` : `
+                    <button class="btn btn-secondary btn-sm" onclick="viewDetails(${approval.id})">查看</button>
+                    <button class="btn btn-primary btn-sm" onclick="showApprovalModal(${approval.id})">重新审批</button>
+                `;
+                
+                return `
+                    <div class="list-item animate-fadeIn">
+                        <div class="item-checkbox">
+                            <input type="checkbox" value="${approval.id}" class="approval-select">
+                        </div>
+                        <div class="item-info">
+                            <h4 class="item-title">${approval.title}</h4>
+                            <div class="item-meta">
+                                <span>类型：${approval.category}</span>
+                                <span>申请人：${approval.submitter}</span>
+                                <span>时间：${utils.formatDate(approval.created_at)}</span>
+                            </div>
+                            <p class="item-description">${approval.description || '无详细说明'}</p>
+                        </div>
+                        <div class="item-amount">
+                            <div class="amount-display">
+                                <span class="amount">${utils.formatMultiCurrencyAmount(approval.amount, approval.currency, approval.usd_amount)}</span>
+                                ${approval.currency !== 'USD' ? `<span class="exchange-info">汇率: ${approval.exchange_rate}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="item-status">
+                            <span class="badge ${utils.getStatusClass(approval.status)}">${utils.getStatusText(approval.status)}</span>
+                        </div>
+                        <div class="item-actions">
+                            ${actionButtons}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            list.innerHTML = html;
+        }
+
+        // 显示审批模态框
+        function showApprovalModal(expenseId) {
+            currentExpenseId = expenseId;
+            const expense = (filteredApprovals.length > 0 ? filteredApprovals : approvals).find(e => e.id == expenseId);
+            if (!expense) return;
+            
+            // 填充报销详情
+            document.getElementById('expenseDetails').innerHTML = `
+                <div style="background: var(--muted); padding: 16px; border-radius: 6px; margin-bottom: 16px;">
+                    <h4 style="margin-bottom: 12px; color: var(--foreground);">报销申请详情</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
+                        <div><strong>申请标题：</strong>${expense.title}</div>
+                        <div><strong>费用类型：</strong>${expense.category}</div>
+                        <div><strong>报销金额：</strong>${utils.formatMultiCurrencyAmount(expense.amount, expense.currency, expense.usd_amount)}</div>
+                        ${expense.currency !== 'USD' ? `<div><strong>汇率：</strong>${expense.exchange_rate}</div>` : ''}
+                        <div><strong>申请人：</strong>${expense.submitter}</div>
+                        <div><strong>申请时间：</strong>${utils.formatDate(expense.created_at)}</div>
+                        <div><strong>费用发生日期：</strong>${utils.formatDate(expense.expense_date)}</div>
+                    </div>
+                    ${expense.description ? `<div style="margin-top: 12px;"><strong>费用说明：</strong><br>${expense.description}</div>` : ''}
+                    
+                    <!-- 附件信息 -->
+                    ${expense.files && expense.files.length > 0 ? `
+                        <div style="margin-top: 16px;">
+                            <strong>报销凭证（${expense.files.length}个文件）：</strong>
+                            <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
+                                ${expense.files.map(file => `
+                                    <a href="/uploads/${file.filename}" target="_blank" class="btn btn-sm btn-secondary">
+                                        📁 ${file.original_filename}
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : '<div style="margin-top: 12px; color: var(--destructive);"><strong>⚠️ 未上传附件</strong></div>'}
+                </div>
+            `;
+            
+            // 如果是已审批的，显示之前的审批意见
+            if (expense.approval_comment) {
+                document.getElementById('approvalComment').value = expense.approval_comment;
+            } else {
+                document.getElementById('approvalComment').value = '';
+            }
+            
+            document.getElementById('approvalModal').classList.add('show');
+        }
+
+        // 关闭审批模态框
+        function closeApprovalModal() {
+            document.getElementById('approvalModal').classList.remove('show');
+            currentExpenseId = null;
+        }
+
+        // 通过审批
+        async function approveExpense() {
+            if (!currentExpenseId) return;
+            
+            const approveBtn = document.getElementById('approveBtn');
+            const originalText = approveBtn.textContent;
+            
+            try {
+                approveBtn.disabled = true;
+                approveBtn.innerHTML = '<div class="loading-spinner"></div> 处理中...';
+                
+                const comment = document.getElementById('approvalComment').value;
+                const response = await api.post(`/api/expenses/${currentExpenseId}/approve`, {
+                    comment: comment
+                });
+                
+                if (response.success) {
+                    utils.showMessage('审批通过！', 'success');
+                    closeApprovalModal();
+                    loadApprovals();
+                } else {
+                    utils.showMessage(response.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                utils.showMessage('网络错误，请稍后重试', 'error');
+            } finally {
+                approveBtn.disabled = false;
+                approveBtn.textContent = originalText;
+            }
+        }
+
+        // 拒绝审批
+        async function rejectExpense() {
+            if (!currentExpenseId) return;
+            
+            const comment = document.getElementById('approvalComment').value;
+            if (!comment.trim()) {
+                utils.showMessage('拒绝申请时必须填写审批意见', 'error');
+                return;
+            }
+            
+            const rejectBtn = document.getElementById('rejectBtn');
+            const originalText = rejectBtn.textContent;
+            
+            try {
+                rejectBtn.disabled = true;
+                rejectBtn.innerHTML = '<div class="loading-spinner"></div> 处理中...';
+                
+                const response = await api.post(`/api/expenses/${currentExpenseId}/reject`, {
+                    comment: comment
+                });
+                
+                if (response.success) {
+                    utils.showMessage('已拒绝申请', 'success');
+                    closeApprovalModal();
+                    loadApprovals();
+                } else {
+                    utils.showMessage(response.message || '操作失败', 'error');
+                }
+            } catch (error) {
+                utils.showMessage('网络错误，请稍后重试', 'error');
+            } finally {
+                rejectBtn.disabled = false;
+                rejectBtn.textContent = originalText;
+            }
+        }
+
+        // 查看详情
+        function viewDetails(id) {
+            window.location.href = `/approval/${id}`;
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            // 使用原始数据计算统计
+            const stats = {
+                pending: approvals.filter(a => a.status === 'pending').length,
+                approved: approvals.filter(a => a.status === 'approved').length,
+                rejected: approvals.filter(a => a.status === 'rejected').length,
+                total: approvals.length
+            };
+            
+            document.getElementById('pendingApprovals').textContent = stats.pending;
+            document.getElementById('approvedToday').textContent = stats.approved;
+            document.getElementById('totalApprovals').textContent = stats.total;
+        }
+
+        // 批量审批
+        async function batchApprove() {
+            const selected = document.querySelectorAll('.approval-select:checked');
+            if (selected.length === 0) {
+                utils.showMessage('请选择要审批的项目', 'error');
+                return;
+            }
+            
+            if (await utils.confirm(`确定要批量通过 ${selected.length} 个申请吗？`)) {
+                utils.showMessage('批量审批功能将在后续版本中实现', 'info');
+            }
+        }
+
+        // 全选功能
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.approval-select');
+            
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll.checked;
+            });
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化高级筛选
+            initAdvancedFilters();
+            
+            // 加载数据
+            loadApprovals();
+            
+            // 点击其他地方关闭用户菜单
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.user-menu')) {
+                    const dropdown = document.getElementById('userDropdown');
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // 点击模态框外部关闭
+            document.getElementById('approvalModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeApprovalModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

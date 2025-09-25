@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统管理 - 报销管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+</head>
+<body class="dashboard-page">
+    <!-- 侧边栏 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">报销管理系统</h2>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9,22 9,12 15,12 15,22"/>
+                        </svg>
+                        <span class="nav-text">仪表板</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/expenses" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="nav-text">报销申请</span>
+                    </a>
+                </li>
+                {% if session.role == 'admin' %}
+                <li class="nav-item">
+                    <a href="/approvals" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                        <span class="nav-text">审批管理</span>
+                    </a>
+                </li>
+                <!-- 新增：数据导出入口 -->
+                <!-- <li class="nav-item">
+                    <a href="/export" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v8"/>
+                            <path d="M8 9l4 4 4-4"/>
+                            <rect x="4" y="17" width="16" height="3" rx="1"/>
+                        </svg>
+                        <span class="nav-text">数据导出</span>
+                    </a>
+                </li> -->
+                <li class="nav-item">
+                    <a href="/reports" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <path d="M9 9h6v6H9z"/>
+                            <path d="M9 1v2"/>
+                            <path d="M15 1v2"/>
+                            <path d="M9 21v2"/>
+                            <path d="M15 21v2"/>
+                            <path d="M1 9h2"/>
+                            <path d="M1 15h2"/>
+                            <path d="M21 9h2"/>
+                            <path d="M21 15h2"/>
+                        </svg>
+                        <span class="nav-text">报表导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link active">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-text">系统管理</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部导航 -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="topbar-right">
+                <!-- 通知 -->
+                <div class="notification-wrapper">
+                    <button class="notification-btn" onclick="toggleNotifications()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    </button>
+                    <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-header">
+                            <h4 class="notification-title">通知消息</h4>
+                            <a href="#" class="mark-all-read" onclick="markAllAsRead()">全部已读</a>
+                        </div>
+                        <div class="notification-list" id="notificationList">
+                            <div class="notification-empty">
+                                <div class="notification-empty-icon">📭</div>
+                                <p>暂无新通知</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户菜单 -->
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        {{ session.username[0] if session.username else 'U' }}
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-info">
+                            <div class="user-name">{{ session.username }}</div>
+                            <div class="user-email">{{ session.role }}</div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16,17 21,12 16,7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="page-content">
+            <div class="content-header">
+                <div class="header-left">
+                    <h1>系统管理</h1>
+                    <p class="page-subtitle">管理系统的货币和分类配置</p>
+                </div>
+            </div>
+
+            <!-- 管理面板 -->
+            <div class="enhanced-stats">
+                <!-- 货币管理 -->
+                <div class="stat-panel-ex">
+                    <div class="panel-header">
+                        <h3 class="panel-title">
+                            <svg class="panel-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="2" r="3"/>
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            货币管理
+                        </h3>
+                        <button class="btn btn-primary btn-sm" onclick="showAddCurrencyModal()">添加货币</button>
+                    </div>
+                    
+                    <!-- 货币筛选 -->
+                    <div id="currencyFilters"></div>
+                    
+                    <div class="panel-content">
+                        <div id="currenciesList" class="admin-list">
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <span>加载中...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分类管理 -->
+                <div class="stat-panel-ex">
+                    <div class="panel-header">
+                        <h3 class="panel-title">
+                            <svg class="panel-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            分类管理
+                        </h3>
+                        <button class="btn btn-primary btn-sm" onclick="showAddCategoryModal()">添加分类</button>
+                    </div>
+                    
+                    <!-- 分类筛选 -->
+                    <div id="categoryFilters"></div>
+                    
+                    <div class="panel-content">
+                        <div id="categoriesList" class="admin-list">
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <span>加载中...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据库管理 -->
+                <div class="stat-panel-ex database-management">
+                    <div class="panel-header">
+                        <h3 class="panel-title">
+                            <svg class="panel-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                            </svg>
+                            数据库管理
+                        </h3>
+                        <button class="btn btn-secondary btn-sm" onclick="refreshDatabaseStats()">刷新统计</button>
+                    </div>
+                    
+                    <div class="panel-content">
+                        <!-- 数据库统计 -->
+                        <div class="database-stats" id="databaseStats">
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <span>加载统计中...</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 数据管理操作 -->
+                        <div class="data-management-zone">
+                            <h4 class="section-title">📊 数据管理</h4>
+                            <p class="section-subtitle">系统数据导入和管理功能</p>
+                            
+                            <div class="management-actions">
+                                <button class="btn btn-success" onclick="importExpenseCategories()" id="importCategoriesBtn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14,2 14,8 20,8"/>
+                                        <line x1="12" y1="18" x2="12" y2="12"/>
+                                        <polyline points="9,15 12,12 15,15"/>
+                                    </svg>
+                                    导入报销类型
+                                </button>
+                                <span class="btn-help-text">导入16种预定义的报销类型（包含详细描述）</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 危险操作区域 -->
+                        <div class="danger-zone">
+                            <h4 class="danger-title">⚠️ 危险操作</h4>
+                            <p class="danger-subtitle">以下操作将永久删除数据，请谨慎操作！</p>
+                            
+                            <div class="danger-actions">
+                                <button class="btn btn-warning" onclick="showClearDatabaseModal()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18"/>
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c0-1-1-2-1-2V6"/>
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                        <line x1="10" y1="11" x2="10" y2="17"/>
+                                        <line x1="14" y1="11" x2="14" y2="17"/>
+                                    </svg>
+                                    清空所有数据
+                                </button>
+                                
+                                <button class="btn btn-primary" onclick="showResetDatabaseModal()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 4v6h6"/>
+                                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                                    </svg>
+                                    重置为默认
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- 添加货币模态框 -->
+    <div class="modal" id="addCurrencyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">添加货币</h3>
+                <button class="modal-close" onclick="closeAddCurrencyModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addCurrencyForm">
+                    <div class="form-group">
+                        <label class="form-label">货币代码</label>
+                        <input type="text" id="currencyCode" class="form-input" placeholder="如: USD" required maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">货币名称</label>
+                        <input type="text" id="currencyName" class="form-input" placeholder="如: 美元" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">货币符号</label>
+                        <input type="text" id="currencySymbol" class="form-input" placeholder="如: $" required maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">汇率 <small style="color: var(--muted-foreground);">（多少单位该货币 = 1美元）</small></label>
+                        <input type="number" id="exchangeRate" class="form-input" placeholder="7.0000" step="0.0001" min="0.0001" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddCurrencyModal()">取消</button>
+                <button class="btn btn-primary" onclick="addCurrency()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加分类模态框 -->
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">添加分类</h3>
+                <button class="modal-close" onclick="closeAddCategoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="form-group">
+                        <label class="form-label">分类名称</label>
+                        <input type="text" id="categoryName" class="form-input" placeholder="如: 餐饮费" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分类描述</label>
+                        <textarea id="categoryDescription" class="form-textarea" placeholder="描述该分类的用途..." rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddCategoryModal()">取消</button>
+                <button class="btn btn-primary" onclick="addCategory()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑货币模态框 -->
+    <div class="modal" id="editCurrencyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑货币</h3>
+                <button class="modal-close" onclick="closeEditCurrencyModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editCurrencyForm">
+                    <input type="hidden" id="editCurrencyId">
+                    <div class="form-group">
+                        <label class="form-label">货币代码</label>
+                        <input type="text" id="editCurrencyCode" class="form-input" placeholder="如: USD" required maxlength="10" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">货币名称</label>
+                        <input type="text" id="editCurrencyName" class="form-input" placeholder="如: 美元" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">货币符号</label>
+                        <input type="text" id="editCurrencySymbol" class="form-input" placeholder="如: $" required maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">汇率 <small style="color: var(--muted-foreground);">（多少单位该货币 = 1美元）</small></label>
+                        <input type="number" id="editExchangeRate" class="form-input" placeholder="7.0000" step="0.0001" min="0.0001" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditCurrencyModal()">取消</button>
+                <button class="btn btn-primary" onclick="updateCurrency()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑分类模态框 -->
+    <div class="modal" id="editCategoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑分类</h3>
+                <button class="modal-close" onclick="closeEditCategoryModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editCategoryForm">
+                    <input type="hidden" id="editCategoryId">
+                    <div class="form-group">
+                        <label class="form-label">分类名称</label>
+                        <input type="text" id="editCategoryName" class="form-input" placeholder="如: 餐饮费" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">分类描述</label>
+                        <textarea id="editCategoryDescription" class="form-textarea" placeholder="描述该分类的用途..." rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditCategoryModal()">取消</button>
+                <button class="btn btn-primary" onclick="updateCategory()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清空数据库模态框 -->
+    <div class="modal" id="clearDatabaseModal">
+        <div class="modal-content modal-danger">
+            <div class="modal-header">
+                <h3 class="modal-title">⚠️ 清空数据库</h3>
+                <button class="modal-close" onclick="closeClearDatabaseModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong>警告：</strong>此操作将永久删除所有数据，包括：
+                    <ul>
+                        <li>所有用户账户</li>
+                        <li>所有报销记录</li>
+                        <li>所有上传文件</li>
+                        <li>所有通知记录</li>
+                        <li>所有货币和分类配置</li>
+                    </ul>
+                    <p><strong>此操作无法撤销！</strong></p>
+                </div>
+
+                <form id="clearDatabaseForm">
+                    <div class="form-group">
+                        <label class="form-label">确认文本</label>
+                        <input type="text" id="clearConfirmation" class="form-input" 
+                               placeholder="请输入: CLEAR ALL DATA" required>
+                        <small class="form-help">必须准确输入确认文本才能执行操作</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">管理员密码</label>
+                        <input type="password" id="clearAdminPassword" class="form-input" 
+                               placeholder="输入您的管理员密码" required>
+                        <small class="form-help">需要验证管理员身份</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeClearDatabaseModal()">取消</button>
+                <button class="btn btn-danger" onclick="executeClearDatabase()" id="clearDatabaseBtn" disabled>
+                    确认清空数据库
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置数据库模态框 -->
+    <div class="modal" id="resetDatabaseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🔄 重置数据库</h3>
+                <button class="modal-close" onclick="closeResetDatabaseModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>注意：</strong>此操作将清空所有数据并重新创建默认配置：
+                    <ul>
+                        <li>默认管理员账户：admin@company.com</li>
+                        <li>默认员工账户：user@company.com</li>
+                        <li>10种常用货币配置</li>
+                        <li>6种报销分类配置</li>
+                    </ul>
+                    <p>现有数据将被完全清除。</p>
+                </div>
+
+                <form id="resetDatabaseForm">
+                    <div class="form-group">
+                        <label class="form-label">确认文本</label>
+                        <input type="text" id="resetConfirmation" class="form-input" 
+                               placeholder="请输入: RESET TO DEFAULTS" required>
+                        <small class="form-help">必须准确输入确认文本才能执行操作</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">管理员密码</label>
+                        <input type="password" id="resetAdminPassword" class="form-input" 
+                               placeholder="输入您的管理员密码" required>
+                        <small class="form-help">需要验证管理员身份</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeResetDatabaseModal()">取消</button>
+                <button class="btn btn-primary" onclick="executeResetDatabase()" id="resetDatabaseBtn" disabled>
+                    确认重置数据库
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/advanced-filters.js') }}"></script>
+    <script>
+        let currencies = [];
+        let filteredCurrencies = [];
+        let currencyFilters = null;
+        
+        let categories = [];
+        let filteredCategories = [];
+        let categoryFilters = null;
+
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            }
+        }
+        
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 初始化货币筛选
+        function initCurrencyFilters() {
+            currencyFilters = new AdvancedFilters('currencyFilters', {
+                title: '货币筛选',
+                collapsed: true,
+                showQuickFilters: true,
+                showSearch: true,
+                fields: [
+                    {
+                        key: 'status',
+                        label: '状态',
+                        type: 'select',
+                        options: [
+                            { value: '', label: '全部状态' },
+                            { value: 'active', label: '已启用' },
+                            { value: 'inactive', label: '已禁用' }
+                        ]
+                    },
+                    {
+                        key: 'exchangeRate',
+                        label: '汇率范围',
+                        type: 'amountRange'
+                    }
+                ],
+                quickFilters: [
+                    { label: '已启用', filters: { status: 'active' } },
+                    { label: '已禁用', filters: { status: 'inactive' } },
+                    { label: '高汇率', filters: { exchangeRate: { min: '5' } } }
+                ],
+                onFilterChange: (filters) => {
+                    applyCurrencyFilters(filters);
+                }
+            });
+        }
+
+        // 初始化分类筛选
+        function initCategoryFilters() {
+            categoryFilters = new AdvancedFilters('categoryFilters', {
+                title: '分类筛选',
+                collapsed: true,
+                showQuickFilters: true,
+                showSearch: true,
+                fields: [
+                    {
+                        key: 'status',
+                        label: '状态',
+                        type: 'select',
+                        options: [
+                            { value: '', label: '全部状态' },
+                            { value: 'active', label: '已启用' },
+                            { value: 'inactive', label: '已禁用' }
+                        ]
+                    }
+                ],
+                quickFilters: [
+                    { label: '已启用', filters: { status: 'active' } },
+                    { label: '已禁用', filters: { status: 'inactive' } }
+                ],
+                onFilterChange: (filters) => {
+                    applyCategoryFilters(filters);
+                }
+            });
+        }
+
+        // 应用货币筛选
+        function applyCurrencyFilters(filters) {
+            filteredCurrencies = currencies.filter(currency => {
+                // 状态筛选
+                if (filters.status) {
+                    const isActive = currency.is_active;
+                    if (filters.status === 'active' && !isActive) return false;
+                    if (filters.status === 'inactive' && isActive) return false;
+                }
+                
+                // 汇率范围筛选
+                if (filters.exchangeRate) {
+                    const rate = parseFloat(currency.exchange_rate);
+                    if (filters.exchangeRate.min !== undefined && rate < parseFloat(filters.exchangeRate.min)) {
+                        return false;
+                    }
+                    if (filters.exchangeRate.max !== undefined && rate > parseFloat(filters.exchangeRate.max)) {
+                        return false;
+                    }
+                }
+                
+                // 搜索筛选
+                if (filters.search) {
+                    const searchTerm = filters.search.toLowerCase();
+                    const searchFields = [
+                        currency.name,
+                        currency.code,
+                        currency.symbol
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    
+                    if (!searchFields.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            renderCurrencies(filteredCurrencies);
+        }
+
+        // 应用分类筛选
+        function applyCategoryFilters(filters) {
+            filteredCategories = categories.filter(category => {
+                // 状态筛选
+                if (filters.status) {
+                    const isActive = category.is_active;
+                    if (filters.status === 'active' && !isActive) return false;
+                    if (filters.status === 'inactive' && isActive) return false;
+                }
+                
+                // 搜索筛选
+                if (filters.search) {
+                    const searchTerm = filters.search.toLowerCase();
+                    const searchFields = [
+                        category.name,
+                        category.description
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    
+                    if (!searchFields.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            renderCategories(filteredCategories);
+        }
+
+        // 加载货币列表
+        async function loadCurrencies() {
+            const container = document.getElementById('currenciesList');
+            
+            try {
+                currencies = await api.get('/api/admin/currencies');
+                filteredCurrencies = currencies;
+                
+                if (currencies.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>暂无货币配置</p></div>';
+                    return;
+                }
+                
+                renderCurrencies(currencies);
+                
+            } catch (error) {
+                console.error('加载货币列表失败:', error);
+                container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+            }
+        }
+
+        // 渲染货币列表
+        function renderCurrencies(data) {
+            const container = document.getElementById('currenciesList');
+            
+            const html = data.map(currency => `
+                <div class="admin-item ${!currency.is_active ? 'disabled' : ''}">
+                    <div class="admin-item-info">
+                        <h4>${currency.name} (${currency.code})</h4>
+                        <p>符号: ${currency.symbol} | 汇率: ${currency.exchange_rate}</p>
+                        ${!currency.is_active ? '<p class="text-warning">⚠️ 此货币已被禁用</p>' : ''}
+                    </div>
+                    <div class="admin-item-actions">
+                        ${currency.is_active ? 
+                            `<button class="btn btn-secondary btn-sm" onclick="editCurrency(${currency.id})">编辑</button>
+                             <button class="btn btn-destructive btn-sm" onclick="deleteCurrency(${currency.id})">删除</button>` :
+                            `<button class="btn btn-primary btn-sm" onclick="restoreCurrency(${currency.id})">恢复</button>
+                             <button class="btn btn-secondary btn-sm" onclick="editCurrency(${currency.id})">查看</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // 加载分类列表
+        async function loadCategories() {
+            const container = document.getElementById('categoriesList');
+            
+            try {
+                categories = await api.get('/api/admin/categories');
+                filteredCategories = categories;
+                
+                if (categories.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>暂无分类配置</p></div>';
+                    return;
+                }
+                
+                renderCategories(categories);
+                
+            } catch (error) {
+                console.error('加载分类列表失败:', error);
+                container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+            }
+        }
+
+        // 渲染分类列表
+        function renderCategories(data) {
+            const container = document.getElementById('categoriesList');
+            
+            const html = data.map(category => `
+                <div class="admin-item ${!category.is_active ? 'disabled' : ''}">
+                    <div class="admin-item-info">
+                        <h4>${category.name}</h4>
+                        <p>${category.description || '无描述'}</p>
+                        ${!category.is_active ? '<p class="text-warning">⚠️ 此分类已被禁用</p>' : ''}
+                    </div>
+                    <div class="admin-item-actions">
+                        ${category.is_active ? 
+                            `<button class="btn btn-secondary btn-sm" onclick="editCategory(${category.id})">编辑</button>
+                             <button class="btn btn-destructive btn-sm" onclick="deleteCategory(${category.id})">删除</button>` :
+                            `<button class="btn btn-primary btn-sm" onclick="restoreCategory(${category.id})">恢复</button>
+                             <button class="btn btn-secondary btn-sm" onclick="editCategory(${category.id})">查看</button>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // 显示添加货币模态框
+        function showAddCurrencyModal() {
+            document.getElementById('addCurrencyModal').classList.add('show');
+        }
+
+        // 关闭添加货币模态框
+        function closeAddCurrencyModal() {
+            document.getElementById('addCurrencyModal').classList.remove('show');
+            document.getElementById('addCurrencyForm').reset();
+        }
+
+        // 添加货币
+        async function addCurrency() {
+            const code = document.getElementById('currencyCode').value.toUpperCase();
+            const name = document.getElementById('currencyName').value;
+            const symbol = document.getElementById('currencySymbol').value;
+            const exchangeRate = document.getElementById('exchangeRate').value;
+            
+            if (!code || !name || !symbol || !exchangeRate) {
+                utils.showMessage('请填写所有字段', 'error');
+                return;
+            }
+            
+            try {
+                await api.post('/api/admin/currencies', {
+                    code, name, symbol, exchange_rate: parseFloat(exchangeRate)
+                });
+                
+                utils.showMessage('货币添加成功', 'success');
+                closeAddCurrencyModal();
+                loadCurrencies();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '添加失败', 'error');
+            }
+        }
+
+        // 删除货币
+        async function deleteCurrency(id) {
+            if (!confirm('确定要删除这个货币吗？如果有相关报销记录，将被禁用而不是删除。')) {
+                return;
+            }
+            
+            try {
+                const result = await api.delete(`/api/admin/currencies/${id}`);
+                utils.showMessage(result.message, 'success');
+                loadCurrencies();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '删除失败', 'error');
+            }
+        }
+
+        // 显示添加分类模态框
+        function showAddCategoryModal() {
+            document.getElementById('addCategoryModal').classList.add('show');
+        }
+
+        // 关闭添加分类模态框
+        function closeAddCategoryModal() {
+            document.getElementById('addCategoryModal').classList.remove('show');
+            document.getElementById('addCategoryForm').reset();
+        }
+
+        // 添加分类
+        async function addCategory() {
+            const name = document.getElementById('categoryName').value;
+            const description = document.getElementById('categoryDescription').value;
+            
+            if (!name) {
+                utils.showMessage('请填写分类名称', 'error');
+                return;
+            }
+            
+            try {
+                await api.post('/api/admin/categories', {
+                    name, description
+                });
+                
+                utils.showMessage('分类添加成功', 'success');
+                closeAddCategoryModal();
+                loadCategories();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '添加失败', 'error');
+            }
+        }
+
+        // 删除分类
+        async function deleteCategory(id) {
+            if (!confirm('确定要删除这个分类吗？如果有相关报销记录，将被禁用而不是删除。')) {
+                return;
+            }
+            
+            try {
+                const result = await api.delete(`/api/admin/categories/${id}`);
+                utils.showMessage(result.message, 'success');
+                loadCategories();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '删除失败', 'error');
+            }
+        }
+
+        // 恢复货币
+        async function restoreCurrency(id) {
+            if (!confirm('确定要恢复这个货币吗？')) {
+                return;
+            }
+            
+            try {
+                const result = await api.post(`/api/admin/currencies/${id}/restore`);
+                utils.showMessage(result.message, 'success');
+                loadCurrencies();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '恢复失败', 'error');
+            }
+        }
+
+        // 恢复分类
+        async function restoreCategory(id) {
+            if (!confirm('确定要恢复这个分类吗？')) {
+                return;
+            }
+            
+            try {
+                const result = await api.post(`/api/admin/categories/${id}/restore`);
+                utils.showMessage(result.message, 'success');
+                loadCategories();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '恢复失败', 'error');
+            }
+        }
+
+        // 编辑货币
+        async function editCurrency(id) {
+            try {
+                const currency = currencies.find(c => c.id === id);
+                
+                if (!currency) {
+                    utils.showMessage('货币不存在', 'error');
+                    return;
+                }
+                
+                // 填充表单数据
+                document.getElementById('editCurrencyId').value = currency.id;
+                document.getElementById('editCurrencyCode').value = currency.code;
+                document.getElementById('editCurrencyName').value = currency.name;
+                document.getElementById('editCurrencySymbol').value = currency.symbol;
+                document.getElementById('editExchangeRate').value = currency.exchange_rate;
+                
+                // 显示模态框
+                document.getElementById('editCurrencyModal').classList.add('show');
+                
+            } catch (error) {
+                utils.showMessage('加载货币信息失败', 'error');
+            }
+        }
+
+        // 关闭编辑货币模态框
+        function closeEditCurrencyModal() {
+            document.getElementById('editCurrencyModal').classList.remove('show');
+            document.getElementById('editCurrencyForm').reset();
+        }
+
+        // 更新货币
+        async function updateCurrency() {
+            const id = document.getElementById('editCurrencyId').value;
+            const name = document.getElementById('editCurrencyName').value;
+            const symbol = document.getElementById('editCurrencySymbol').value;
+            const exchangeRate = document.getElementById('editExchangeRate').value;
+            
+            if (!name || !symbol || !exchangeRate) {
+                utils.showMessage('请填写所有字段', 'error');
+                return;
+            }
+            
+            try {
+                await api.put(`/api/admin/currencies/${id}`, {
+                    name, symbol, exchange_rate: parseFloat(exchangeRate)
+                });
+                
+                utils.showMessage('货币更新成功', 'success');
+                closeEditCurrencyModal();
+                loadCurrencies();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '更新失败', 'error');
+            }
+        }
+
+        // 编辑分类
+        async function editCategory(id) {
+            try {
+                const category = categories.find(c => c.id === id);
+                
+                if (!category) {
+                    utils.showMessage('分类不存在', 'error');
+                    return;
+                }
+                
+                // 填充表单数据
+                document.getElementById('editCategoryId').value = category.id;
+                document.getElementById('editCategoryName').value = category.name;
+                document.getElementById('editCategoryDescription').value = category.description || '';
+                
+                // 显示模态框
+                document.getElementById('editCategoryModal').classList.add('show');
+                
+            } catch (error) {
+                utils.showMessage('加载分类信息失败', 'error');
+            }
+        }
+
+        // 关闭编辑分类模态框
+        function closeEditCategoryModal() {
+            document.getElementById('editCategoryModal').classList.remove('show');
+            document.getElementById('editCategoryForm').reset();
+        }
+
+        // 更新分类
+        async function updateCategory() {
+            const id = document.getElementById('editCategoryId').value;
+            const name = document.getElementById('editCategoryName').value;
+            const description = document.getElementById('editCategoryDescription').value;
+            
+            if (!name) {
+                utils.showMessage('请填写分类名称', 'error');
+                return;
+            }
+            
+            try {
+                await api.put(`/api/admin/categories/${id}`, {
+                    name, description
+                });
+                
+                utils.showMessage('分类更新成功', 'success');
+                closeEditCategoryModal();
+                loadCategories();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '更新失败', 'error');
+            }
+        }
+
+        // 数据库管理功能
+        let databaseStats = {};
+
+        // 导入报销类型
+        async function importExpenseCategories() {
+            const button = document.getElementById('importCategoriesBtn');
+            const originalText = button.innerHTML;
+            
+            try {
+                // 显示加载状态
+                button.disabled = true;
+                button.innerHTML = `
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    导入中...
+                `;
+                
+                const response = await api.post('/api/admin/import-categories');
+                
+                // 显示成功消息
+                utils.showMessage(
+                    `导入成功！新增 ${response.imported} 个，更新 ${response.updated} 个，跳过 ${response.skipped} 个`, 
+                    'success'
+                );
+                
+                // 刷新数据库统计
+                await refreshDatabaseStats();
+                
+            } catch (error) {
+                utils.showMessage('导入失败: ' + error.message, 'error');
+            } finally {
+                // 恢复按钮状态
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+
+        // 加载数据库统计信息
+        async function refreshDatabaseStats() {
+            try {
+                const response = await api.get('/api/admin/database-stats');
+                databaseStats = response.stats;
+                renderDatabaseStats();
+            } catch (error) {
+                utils.showMessage('加载统计信息失败: ' + error.message, 'error');
+            }
+        }
+
+        // 渲染数据库统计信息
+        function renderDatabaseStats() {
+            const container = document.getElementById('databaseStats');
+            const formatFileSize = (bytes) => {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            };
+
+            container.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${databaseStats.users || 0}</div>
+                            <div class="stat-label">用户</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${databaseStats.expenses || 0}</div>
+                            <div class="stat-label">报销记录</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">📎</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${databaseStats.expense_files || 0}</div>
+                            <div class="stat-label">附件记录</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">🔔</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${databaseStats.notifications || 0}</div>
+                            <div class="stat-label">通知</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">💱</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${databaseStats.currencies || 0}</div>
+                            <div class="stat-label">货币类型</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">🏷️</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${databaseStats.categories || 0}</div>
+                            <div class="stat-label">分类</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">📄</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${databaseStats.uploaded_files || 0}</div>
+                            <div class="stat-label">上传文件</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-content">
+                            <div class="stat-value">${formatFileSize(databaseStats.total_file_size || 0)}</div>
+                            <div class="stat-label">文件大小</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-summary">
+                    <p><strong>总记录数：</strong>${databaseStats.total_records || 0} 条</p>
+                    <p><small>最后更新：${new Date().toLocaleString()}</small></p>
+                </div>
+            `;
+        }
+
+        // 显示清空数据库模态框
+        function showClearDatabaseModal() {
+            document.getElementById('clearDatabaseModal').classList.add('show');
+        }
+
+        // 关闭清空数据库模态框
+        function closeClearDatabaseModal() {
+            document.getElementById('clearDatabaseModal').classList.remove('show');
+            document.getElementById('clearDatabaseForm').reset();
+            document.getElementById('clearDatabaseBtn').disabled = true;
+        }
+
+        // 显示重置数据库模态框
+        function showResetDatabaseModal() {
+            document.getElementById('resetDatabaseModal').classList.add('show');
+        }
+
+        // 关闭重置数据库模态框
+        function closeResetDatabaseModal() {
+            document.getElementById('resetDatabaseModal').classList.remove('show');
+            document.getElementById('resetDatabaseForm').reset();
+            document.getElementById('resetDatabaseBtn').disabled = true;
+        }
+
+        // 执行清空数据库
+        async function executeClearDatabase() {
+            const confirmation = document.getElementById('clearConfirmation').value;
+            const password = document.getElementById('clearAdminPassword').value;
+
+            if (confirmation !== 'CLEAR ALL DATA') {
+                utils.showMessage('确认文本不正确', 'error');
+                return;
+            }
+
+            if (!password) {
+                utils.showMessage('请输入管理员密码', 'error');
+                return;
+            }
+
+            try {
+                const confirmAgain = confirm('最后确认：您确定要清空所有数据吗？此操作无法撤销！');
+                if (!confirmAgain) return;
+
+                const response = await api.post('/api/admin/clear-database', {
+                    confirmation: confirmation,
+                    admin_password: password
+                });
+
+                utils.showMessage('数据库已完全清空', 'success');
+                closeClearDatabaseModal();
+                
+                // 显示清空结果
+                setTimeout(() => {
+                    alert('清空完成！详情：\\n' + response.clear_results.join('\\n'));
+                    // 页面将会因为session失效而重定向到登录页
+                    window.location.href = '/';
+                }, 1000);
+
+            } catch (error) {
+                utils.showMessage('清空失败: ' + error.message, 'error');
+            }
+        }
+
+        // 执行重置数据库
+        async function executeResetDatabase() {
+            const confirmation = document.getElementById('resetConfirmation').value;
+            const password = document.getElementById('resetAdminPassword').value;
+
+            if (confirmation !== 'RESET TO DEFAULTS') {
+                utils.showMessage('确认文本不正确', 'error');
+                return;
+            }
+
+            if (!password) {
+                utils.showMessage('请输入管理员密码', 'error');
+                return;
+            }
+
+            try {
+                const confirmAgain = confirm('最后确认：您确定要重置数据库到默认状态吗？');
+                if (!confirmAgain) return;
+
+                const response = await api.post('/api/admin/reset-to-defaults', {
+                    confirmation: confirmation,
+                    admin_password: password
+                });
+
+                utils.showMessage('数据库已重置为默认状态', 'success');
+                closeResetDatabaseModal();
+                
+                setTimeout(() => {
+                    alert('重置完成！已创建默认管理员和员工账户，以及基础配置数据。');
+                    // 重新登录
+                    window.location.href = '/';
+                }, 1000);
+
+            } catch (error) {
+                utils.showMessage('重置失败: ' + error.message, 'error');
+            }
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrencies();
+            loadCategories();
+            refreshDatabaseStats();
+            
+            // 点击其他地方关闭用户菜单
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.user-menu')) {
+                    const dropdown = document.getElementById('userDropdown');
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // 点击模态框外部关闭
+            document.getElementById('addCurrencyModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddCurrencyModal();
+                }
+            });
+
+            document.getElementById('addCategoryModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddCategoryModal();
+                }
+            });
+
+            document.getElementById('editCurrencyModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeEditCurrencyModal();
+                }
+            });
+
+            document.getElementById('editCategoryModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeEditCategoryModal();
+                }
+            });
+
+            // 数据库管理模态框事件
+            document.getElementById('clearDatabaseModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeClearDatabaseModal();
+                }
+            });
+
+            document.getElementById('resetDatabaseModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeResetDatabaseModal();
+                }
+            });
+
+            // 表单验证 - 清空数据库
+            const clearConfirmation = document.getElementById('clearConfirmation');
+            const clearPassword = document.getElementById('clearAdminPassword');
+            const clearBtn = document.getElementById('clearDatabaseBtn');
+
+            function validateClearForm() {
+                const isValid = clearConfirmation.value === 'CLEAR ALL DATA' && clearPassword.value.trim() !== '';
+                clearBtn.disabled = !isValid;
+            }
+
+            clearConfirmation.addEventListener('input', validateClearForm);
+            clearPassword.addEventListener('input', validateClearForm);
+
+            // 表单验证 - 重置数据库
+            const resetConfirmation = document.getElementById('resetConfirmation');
+            const resetPassword = document.getElementById('resetAdminPassword');
+            const resetBtn = document.getElementById('resetDatabaseBtn');
+
+            function validateResetForm() {
+                const isValid = resetConfirmation.value === 'RESET TO DEFAULTS' && resetPassword.value.trim() !== '';
+                resetBtn.disabled = !isValid;
+            }
+
+            resetConfirmation.addEventListener('input', validateResetForm);
+            resetPassword.addEventListener('input', validateResetForm);
+        });
+    </script>
+</body>
+</html>

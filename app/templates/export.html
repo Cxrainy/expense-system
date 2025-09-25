@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据导出 - 报销管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+    <style>
+        .export-card { background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); padding: 24px; }
+        .export-form { display: grid; grid-template-columns: repeat(3, minmax(220px, 320px)); gap: 16px; align-items: end; }
+        .form-field { display: flex; flex-direction: column; gap: 6px; }
+        .form-field label { font-size: 14px; color: #6b7280; }
+        .form-field input[type="date"] { height: 40px; padding: 0 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; color: #111827; }
+        .actions { display: flex; gap: 12px; }
+        .hint { margin-top: 10px; color: #6b7280; font-size: 13px; }
+        .divider { height: 1px; background: #eef2f7; margin: 20px 0; }
+        .result { margin-top: 16px; font-size: 14px; color: #374151; }
+        .hidden { display: none; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 8px; border: 0; cursor: pointer; }
+        .btn-primary { background: #4f46e5; color: #fff; }
+        .btn-secondary { background: #f3f4f6; color: #374151; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .download-icon, .clear-icon { width: 18px; height: 18px; }
+        @media (max-width: 900px) { .export-form { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body class="dashboard-page">
+    <!-- 侧边栏，与admin页面风格一致 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">报销管理系统</h2>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9,22 9,12 15,12 15,22"/>
+                        </svg>
+                        <span class="nav-text">仪表板</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/expenses" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="nav-text">报销申请</span>
+                    </a>
+                </li>
+                {% if session.role == 'admin' %}
+                <li class="nav-item">
+                    <a href="/approvals" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                        <span class="nav-text">审批管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/export" class="nav-link active">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v8"/>
+                            <path d="M8 9l4 4 4-4"/>
+                            <rect x="4" y="17" width="16" height="3" rx="1"/>
+                        </svg>
+                        <span class="nav-text">数据导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/reports" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <path d="M9 9h6v6H9z"/>
+                            <path d="M9 1v2"/>
+                            <path d="M15 1v2"/>
+                            <path d="M9 21v2"/>
+                            <path d="M15 21v2"/>
+                            <path d="M1 9h2"/>
+                            <path d="M1 15h2"/>
+                            <path d="M21 9h2"/>
+                            <path d="M21 15h2"/>
+                        </svg>
+                        <span class="nav-text">报表导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-text">系统管理</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部导航（复用样式） -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="topbar-right">
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar">{{ session.username[0] if session.username else 'U' }}</div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-info">
+                            <div class="user-name">{{ session.username }}</div>
+                            <div class="user-email">{{ session.role }}</div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">退出登录</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="page-content">
+            <div class="content-header">
+                <div class="header-left">
+                    <h1>数据导出</h1>
+                    <p class="page-subtitle">按时间区间导出报销条目为Excel文件</p>
+                </div>
+            </div>
+
+            <div class="export-card">
+                <form id="exportForm" class="export-form" onsubmit="return false;">
+                    <div class="form-field">
+                        <label for="startDate">开始日期</label>
+                        <input type="date" id="startDate" name="startDate" />
+                    </div>
+                    <div class="form-field">
+                        <label for="endDate">结束日期</label>
+                        <input type="date" id="endDate" name="endDate" />
+                    </div>
+                    <div class="actions">
+                        <button id="btnExport" class="btn btn-primary" onclick="exportExcel()">
+                            <svg class="download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v8"/>
+                                <path d="M8 9l4 4 4-4"/>
+                                <rect x="4" y="17" width="16" height="3" rx="1"/>
+                            </svg>
+                            导出Excel
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearDates()" type="button">
+                            <svg class="clear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                            清空
+                        </button>
+                    </div>
+                </form>
+                <div class="hint">提示：不选择日期将导出全部数据；只填开始或结束日期将按单端点进行过滤。</div>
+                <div id="result" class="result hidden"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
+        function toggleUserMenu(){ const el = document.getElementById('userDropdown'); if(el){ el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }}
+        function clearDates(){
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            const r = document.getElementById('result'); r.textContent = ''; r.classList.add('hidden');
+        }
+        function setLoading(loading){
+            const btn = document.getElementById('btnExport');
+            btn.disabled = loading;
+            btn.textContent = loading ? '正在导出...' : '导出Excel';
+        }
+        async function exportExcel(){
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            const result = document.getElementById('result');
+            result.classList.add('hidden');
+            result.textContent = '';
+
+            // 简单校验：若两个都填，确保开始<=结束
+            if(start && end){
+                const sd = new Date(start); const ed = new Date(end);
+                if(sd > ed){
+                    result.textContent = '开始日期不能晚于结束日期';
+                    result.classList.remove('hidden');
+                    return;
+                }
+            }
+            setLoading(true);
+            try{
+                const res = await fetch('/api/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ start_date: start || null, end_date: end || null })
+                });
+                const ct = res.headers.get('Content-Type') || '';
+                if(!res.ok){
+                    let msg = '导出失败';
+                    if(ct.includes('application/json')){
+                        const err = await res.json().catch(()=>null);
+                        if(err && err.error){ msg = err.error; }
+                    }
+                    throw new Error(msg);
+                }
+                // 成功：下载文件
+                const blob = await res.blob();
+                // 从Content-Disposition解析文件名
+                let filename = 'expense_export.xlsx';
+                const cd = res.headers.get('Content-Disposition');
+                if(cd){
+                    const m = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(cd);
+                    if(m){ filename = decodeURIComponent(m[1] || m[2]); }
+                }
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+                a.remove(); window.URL.revokeObjectURL(url);
+                result.textContent = '导出成功，已开始下载。';
+                result.classList.remove('hidden');
+            }catch(e){
+                result.textContent = e.message || '导出失败';
+                result.classList.remove('hidden');
+            }finally{
+                setLoading(false);
+            }
+        }
+    </script>
+</body>
+</html>

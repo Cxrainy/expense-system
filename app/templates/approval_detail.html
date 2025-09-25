@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审批详情 - 报销管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+</head>
+<body class="dashboard-page">
+    <!-- 侧边栏 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">报销管理系统</h2>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9,22 9,12 15,12 15,22"/>
+                        </svg>
+                        <span class="nav-text">仪表板</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/expenses" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="nav-text">报销申请</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/approvals" class="nav-link active">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                        <span class="nav-text">审批管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/reports" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <path d="M9 9h6v6H9z"/>
+                            <path d="M9 1v2"/>
+                            <path d="M15 1v2"/>
+                            <path d="M9 21v2"/>
+                            <path d="M15 21v2"/>
+                            <path d="M1 9h2"/>
+                            <path d="M1 15h2"/>
+                            <path d="M21 9h2"/>
+                            <path d="M21 15h2"/>
+                        </svg>
+                        <span class="nav-text">报表导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-text">系统管理</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 移动端侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部导航栏 -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="topbar-right">
+                <button class="notification-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+                
+                <div class="divider"></div>
+                
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        <span>{{ session.username[0] if session.username else 'U' }}</span>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-info">
+                            <p class="user-name">{{ session.username or '用户' }}</p>
+                            <p class="user-email">{{ session.role or 'employee' }}</p>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            个人资料
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16,17 21,12 16,7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            退出登录
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="page-content">
+            <div class="content-header">
+                <div class="header-left">
+                    <div class="breadcrumb">
+                        <a href="/approvals" class="breadcrumb-link">审批管理</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">审批详情</span>
+                    </div>
+                    <h1 class="page-title">{{ expense.title }}</h1>
+                    <p class="page-subtitle">报销申请详细信息和审批操作</p>
+                </div>
+                <div class="header-actions">
+                    <a href="/approvals" class="btn btn-secondary">
+                        返回列表
+                    </a>
+                    {% if expense.status == 'pending' %}
+                    <button class="btn btn-primary" onclick="showApprovalModal()">
+                        <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                        立即审批
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 审批状态卡片 -->
+            <div class="status-card">
+                <div class="status-header">
+                    <div class="status-info">
+                        <h3 class="status-title">当前状态</h3>
+                        <span class="badge {% if expense.status == 'pending' %}badge-warning{% elif expense.status == 'approved' %}badge-success{% elif expense.status == 'rejected' %}badge-danger{% endif %}">
+                            {% if expense.status == 'pending' %}待审批
+                            {% elif expense.status == 'approved' %}已通过
+                            {% elif expense.status == 'rejected' %}已拒绝
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="status-timeline">
+                        <div class="timeline-item {% if expense.created_at %}completed{% endif %}">
+                            <div class="timeline-icon">📝</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">申请提交</div>
+                                <div class="timeline-time">{{ expense.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            </div>
+                        </div>
+                        {% if expense.approved_at %}
+                        <div class="timeline-item completed">
+                            <div class="timeline-icon">
+                                {% if expense.status == 'approved' %}✅{% else %}❌{% endif %}
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">
+                                    {% if expense.status == 'approved' %}审批通过{% else %}审批拒绝{% endif %}
+                                </div>
+                                <div class="timeline-time">{{ expense.approved_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="timeline-item pending">
+                            <div class="timeline-icon">⏳</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">等待审批</div>
+                                <div class="timeline-time">待处理</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详情网格 -->
+            <div class="detail-grid">
+                <!-- 基本信息 -->
+                <div class="detail-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <svg class="card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            基本信息
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label class="info-label">申请标题</label>
+                                <div class="info-value">{{ expense.title }}</div>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">费用类型</label>
+                                <div class="info-value">{{ expense.category }}</div>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">申请金额</label>
+                                <div class="info-value amount-value">¥{{ "%.2f"|format(expense.amount) }}</div>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">费用发生日期</label>
+                                <div class="info-value">{{ expense.expense_date.strftime('%Y年%m月%d日') }}</div>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">申请人</label>
+                                <div class="info-value">{{ expense.submitter.username }}</div>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">申请时间</label>
+                                <div class="info-value">{{ expense.created_at.strftime('%Y年%m月%d日 %H:%M') }}</div>
+                            </div>
+                        </div>
+                        {% if expense.description %}
+                        <div class="description-section">
+                            <label class="info-label">费用说明</label>
+                            <div class="description-content">{{ expense.description }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 附件信息 -->
+                <div class="detail-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <svg class="card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                            </svg>
+                            报销凭证
+                            <span class="file-count">({{ expense.files|length }} 个文件)</span>
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        {% if expense.files %}
+                        <div class="files-grid">
+                            {% for file in expense.files %}
+                            <div class="file-item">
+                                <div class="file-preview">
+                                    {% set file_ext = file.file_type.lower() %}
+                                    {% if file_ext in ['png', 'jpg', 'jpeg', 'gif'] %}
+                                    <img src="/uploads/{{ file.filename }}" alt="{{ file.original_filename }}" class="file-thumbnail" onclick="previewFile('{{ file.filename }}', '{{ file.original_filename }}', 'image')">
+                                    {% elif file_ext == 'pdf' %}
+                                    <div class="file-icon pdf" onclick="previewFile('{{ file.filename }}', '{{ file.original_filename }}', 'pdf')">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14,2 14,8 20,8"/>
+                                            <line x1="16" y1="13" x2="8" y2="13"/>
+                                            <line x1="16" y1="17" x2="8" y2="17"/>
+                                        </svg>
+                                        <span>PDF</span>
+                                    </div>
+                                    {% else %}
+                                    <div class="file-icon document" onclick="downloadFile('{{ file.filename }}', '{{ file.original_filename }}')">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14,2 14,8 20,8"/>
+                                        </svg>
+                                        <span>{{ file_ext.upper() }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="file-info">
+                                    <div class="file-name" title="{{ file.original_filename }}">{{ file.original_filename }}</div>
+                                    <div class="file-meta">
+                                        <span class="file-size">{{ (file.file_size / 1024)|round(1) }} KB</span>
+                                        <span class="file-time">{{ file.uploaded_at.strftime('%m-%d %H:%M') }}</span>
+                                    </div>
+                                </div>
+                                <div class="file-actions">
+                                    <button class="btn-icon" onclick="downloadFile('{{ file.filename }}', '{{ file.original_filename }}')" title="下载">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7,10 12,15 17,10"/>
+                                            <line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-files">
+                            <div class="empty-icon">📎</div>
+                            <p>暂无上传的凭证文件</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 审批信息 -->
+                <div class="detail-card full-width">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <svg class="card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22,4 12,14.01 9,11.01"/>
+                            </svg>
+                            审批信息
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        {% if expense.status == 'pending' %}
+                        <div class="approval-pending">
+                            <div class="pending-icon">⏳</div>
+                            <div class="pending-content">
+                                <h4>等待审批</h4>
+                                <p>该报销申请正在等待管理员审批处理</p>
+                                <button class="btn btn-primary" onclick="showApprovalModal()">立即审批</button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="approval-result">
+                            <div class="approval-header">
+                                <div class="approval-status">
+                                    <span class="badge {{ 'badge-success' if expense.status == 'approved' else 'badge-danger' }}">
+                                        {% if expense.status == 'approved' %}审批通过{% else %}审批拒绝{% endif %}
+                                    </span>
+                                </div>
+                                <div class="approval-meta">
+                                    <span>审批时间：{{ expense.approved_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
+                                </div>
+                            </div>
+                            {% if expense.approval_comment %}
+                            <div class="approval-comment">
+                                <label class="info-label">审批意见</label>
+                                <div class="comment-content">{{ expense.approval_comment }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 审批模态框 -->
+    <div class="modal" id="approvalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">审批申请</h3>
+                <button class="modal-close" onclick="closeApprovalModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="approval-summary">
+                    <h4>{{ expense.title }}</h4>
+                    <div class="summary-info">
+                        <span>申请人：{{ expense.submitter.username }}</span>
+                        <span>金额：¥{{ "%.2f"|format(expense.amount) }}</span>
+                        <span>类型：{{ expense.category }}</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="approvalComment" class="form-label">审批意见</label>
+                    <textarea id="approvalComment" class="form-textarea" rows="4" placeholder="请输入审批意见..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeApprovalModal()">取消</button>
+                <button class="btn btn-destructive" onclick="rejectExpense()">拒绝</button>
+                <button class="btn btn-primary" onclick="approveExpense()">通过</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文件预览模态框 -->
+    <div class="modal" id="filePreviewModal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="previewTitle">文件预览</h3>
+                <button class="modal-close" onclick="closeFilePreview()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent" class="preview-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/file-preview.js') }}"></script>
+    <script>
+        const expenseId = {{ expense.id|tojson }};
+
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            }
+        }
+        
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 显示审批模态框
+        function showApprovalModal() {
+            const modal = document.getElementById('approvalModal');
+            modal.classList.add('show');
+        }
+
+        // 关闭审批模态框
+        function closeApprovalModal() {
+            const modal = document.getElementById('approvalModal');
+            modal.classList.remove('show');
+            document.getElementById('approvalComment').value = '';
+        }
+
+        // 通过申请
+        async function approveExpense() {
+            const comment = document.getElementById('approvalComment').value;
+            
+            try {
+                const response = await fetch(`/api/expenses/${expenseId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ comment })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    utils.showMessage('审批通过！', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    utils.showMessage(result.error || '操作失败', 'error');
+                }
+            } catch (error) {
+                utils.showMessage('网络错误，请稍后重试', 'error');
+            }
+        }
+
+        // 拒绝申请
+        async function rejectExpense() {
+            const comment = document.getElementById('approvalComment').value;
+            
+            if (!comment.trim()) {
+                utils.showMessage('拒绝申请时必须填写审批意见', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/expenses/${expenseId}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ comment })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    utils.showMessage('已拒绝申请', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    utils.showMessage(result.error || '操作失败', 'error');
+                }
+            } catch (error) {
+                utils.showMessage('网络错误，请稍后重试', 'error');
+            }
+        }
+
+        // 文件预览
+        function previewFile(filename, originalName, type) {
+            const modal = document.getElementById('filePreviewModal');
+            const title = document.getElementById('previewTitle');
+            const content = document.getElementById('previewContent');
+            
+            title.textContent = originalName;
+            
+            if (type === 'image') {
+                content.innerHTML = `<img src="/uploads/${filename}" alt="${originalName}" style="max-width: 100%; height: auto;">`;
+            } else if (type === 'pdf') {
+                content.innerHTML = `<iframe src="/uploads/${filename}" style="width: 100%; height: 600px; border: none;"></iframe>`;
+            }
+            
+            modal.classList.add('show');
+        }
+
+        // 关闭文件预览
+        function closeFilePreview() {
+            const modal = document.getElementById('filePreviewModal');
+            modal.classList.remove('show');
+        }
+
+        // 下载文件
+        function downloadFile(filename, originalName) {
+            const link = document.createElement('a');
+            link.href = `/uploads/${filename}`;
+            link.download = originalName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 点击其他地方关闭用户菜单
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.user-menu')) {
+                    const dropdown = document.getElementById('userDropdown');
+                    dropdown.classList.remove('show');
+                }
+            });
+
+            // 点击模态框外部关闭
+            document.getElementById('approvalModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeApprovalModal();
+                }
+            });
+
+            document.getElementById('filePreviewModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeFilePreview();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

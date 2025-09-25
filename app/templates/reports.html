@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报表导出 - 报销管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+</head>
+<body class="dashboard-page">
+    <!-- 侧边栏 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">报销管理系统</h2>
+        </div>
+        <div class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9,22 9,12 15,12 15,22"/>
+                        </svg>
+                        <span class="nav-text">仪表板</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/expenses" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        <span class="nav-text">报销申请</span>
+                    </a>
+                </li>
+                {% if session.role == 'admin' %}
+                <li class="nav-item">
+                    <a href="/approvals" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22,4 12,14.01 9,11.01"/>
+                        </svg>
+                        <span class="nav-text">审批管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/reports" class="nav-link active">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <path d="M9 9h6v6H9z"/>
+                            <path d="M9 1v2"/>
+                            <path d="M15 1v2"/>
+                            <path d="M9 21v2"/>
+                            <path d="M15 21v2"/>
+                            <path d="M1 9h2"/>
+                            <path d="M1 15h2"/>
+                            <path d="M21 9h2"/>
+                            <path d="M21 15h2"/>
+                        </svg>
+                        <span class="nav-text">报表导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link">
+                        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="nav-text">系统管理</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 移动端侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <!-- 顶部导航栏 -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <h1 class="page-title">报表导出</h1>
+            </div>
+            
+            <div class="topbar-right">
+                <button class="notification-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+                
+                <div class="divider"></div>
+                
+                <div class="user-menu" onclick="toggleUserMenu()">
+                    <div class="user-avatar">
+                        <span>{{ session.username[0] if session.username else 'U' }}</span>
+                    </div>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-info">
+                            <p class="user-name">{{ session.username or '用户' }}</p>
+                            <p class="user-email">{{ session.role or 'employee' }}</p>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16,17 21,12 16,7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            <span>退出登录</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面内容 -->
+        <main class="page-content">
+            <!-- 筛选器卡片 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                        </svg>
+                        报表筛选条件
+                    </h3>
+                    <p class="card-description">选择时间范围和导出选项生成详细报表</p>
+                </div>
+                
+                <div class="card-content">
+                    <form id="reportForm" class="report-form">
+                        <div class="form-grid">
+                            <!-- 时间范围 -->
+                            <div class="form-group">
+                                <label for="startDate" class="form-label">开始日期</label>
+                                <input 
+                                    type="date" 
+                                    id="startDate" 
+                                    name="start_date"
+                                    class="form-input"
+                                    required
+                                >
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="endDate" class="form-label">结束日期</label>
+                                <input 
+                                    type="date" 
+                                    id="endDate" 
+                                    name="end_date"
+                                    class="form-input"
+                                    required
+                                >
+                            </div>
+                            
+                            <!-- 状态筛选 -->
+                            <div class="form-group">
+                                <label for="statusFilter" class="form-label">审批状态</label>
+                                <select id="statusFilter" name="status" class="form-select">
+                                    <option value="all">全部状态</option>
+                                    <option value="pending">待审批</option>
+                                    <option value="approved">已通过</option>
+                                    <option value="rejected">已拒绝</option>
+                                </select>
+                            </div>
+                            
+                            <!-- 图片质量设置 -->
+                            <div class="form-group">
+                                <label for="imageQuality" class="form-label">图片质量</label>
+                                <select id="imageQuality" name="image_quality" class="form-select">
+                                    <option value="high">高质量（原图）</option>
+                                    <option value="medium" selected>中等质量（推荐）</option>
+                                    <option value="low">低质量（压缩）</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- 报表类型 -->
+                        <div class="form-section">
+                            <h4 class="section-title">报表类型</h4>
+                            <div class="radio-group">
+                                <label class="radio-item">
+                                    <input type="radio" name="report_type" value="detailed" checked>
+                                    <span class="radio-mark"></span>
+                                    <div class="radio-content">
+                                        <span class="radio-label">详细报表</span>
+                                        <span class="radio-description">包含每条报销记录的详细信息、图片附件等</span>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-item">
+                                    <input type="radio" name="report_type" value="summary">
+                                    <span class="radio-mark"></span>
+                                    <div class="radio-content">
+                                        <span class="radio-label">月度汇总表</span>
+                                        <span class="radio-description">按报销类型汇总统计，包含标准占比和实际占比</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- 导出选项 -->
+                        <div class="form-section" id="detailedOptions">
+                            <h4 class="section-title">导出选项</h4>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="includeImages" name="include_images" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-label">包含图片附件</span>
+                                </label>
+                                
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="groupByCategory" name="group_by_category" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-label">按报销类型分工作簿</span>
+                                </label>
+                                
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="includeComments" name="include_comments" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-label">包含审批意见</span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 预览统计 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4"/>
+                            <path d="M9 7h4a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9"/>
+                            <path d="M13 7h6a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-6"/>
+                        </svg>
+                        数据预览
+                    </h3>
+                </div>
+                
+                <div class="card-content">
+                    <div class="stats-grid" id="previewStats">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalRecords">-</div>
+                            <div class="stat-label">总记录数</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalCategories">-</div>
+                            <div class="stat-label">报销类型数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value-large" id="totalAmount">-</div>
+                        <div class="stat-label">总金额（USD）</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="withImages">-</div>
+                            <div class="stat-label">包含图片记录</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 按类型分布 -->
+                    <div class="category-preview" id="categoryPreview">
+                        <!-- 动态生成类型统计 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 导出操作 -->
+            <div class="card">
+                <div class="card-content">
+                    <div class="export-actions">
+                        <button 
+                            type="button" 
+                            class="btn btn-secondary" 
+                            onclick="previewData()"
+                            id="previewBtn"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            预览数据
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            class="btn btn-primary" 
+                            onclick="exportReport()"
+                            id="exportBtn"
+                            disabled
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7,10 12,15 17,10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <span id="exportBtnText">导出Excel报表</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 导出进度模态框 -->
+            <div id="exportModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>导出进度</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text" id="progressText">准备导出...</div>
+                        </div>
+                        <div class="export-details" id="exportDetails">
+                            <p>正在处理报销数据和图片...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 脚本 -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            setDefaultDates();
+        });
+
+        // 处理报表类型切换
+        function handleReportTypeChange() {
+            const reportType = document.querySelector('input[name="report_type"]:checked').value;
+            const detailedOptions = document.getElementById('detailedOptions');
+            
+            if (reportType === 'summary') {
+                // 月度汇总表不需要详细选项
+                detailedOptions.style.display = 'none';
+            } else {
+                // 详细报表显示所有选项
+                detailedOptions.style.display = 'block';
+            }
+        }
+
+        // 初始化页面
+        function initializePage() {
+            // 监听表单变化
+            const form = document.getElementById('reportForm');
+            const inputs = form.querySelectorAll('input, select');
+            
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    // 处理报表类型切换
+                    if (input.name === 'report_type') {
+                        handleReportTypeChange();
+                    }
+                    
+                    // 重置导出按钮状态
+                    const exportBtn = document.getElementById('exportBtn');
+                    exportBtn.disabled = true;
+                    exportBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>请先预览数据</span>
+                    `;
+                    
+                    // 清空预览统计
+                    clearPreviewStats();
+                });
+            });
+        }
+
+        // 设置默认日期（最近30天）
+        function setDefaultDates() {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            
+            // 初始化报表类型显示
+            handleReportTypeChange();
+        }
+
+        // 清空预览统计
+        function clearPreviewStats() {
+            document.getElementById('totalRecords').textContent = '-';
+            document.getElementById('totalCategories').textContent = '-';
+            document.getElementById('totalAmount').textContent = '-';
+            document.getElementById('withImages').textContent = '-';
+            document.getElementById('categoryPreview').innerHTML = '';
+        }
+
+        // 预览数据
+        async function previewData() {
+            const previewBtn = document.getElementById('previewBtn');
+            const originalText = previewBtn.innerHTML;
+            
+            try {
+                previewBtn.disabled = true;
+                previewBtn.innerHTML = '<div class="loading-spinner"></div> 加载中...';
+                
+                const formData = getFormData();
+                const response = await api.post('/api/reports/preview', formData);
+                
+                if (response.success) {
+                    updatePreviewStats(response.data);
+                    
+                    // 启用导出按钮
+                    const exportBtn = document.getElementById('exportBtn');
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>导出Excel报表</span>
+                    `;
+                    
+                    utils.showMessage('数据预览完成！', 'success');
+                } else {
+                    utils.showMessage(response.message || '预览失败', 'error');
+                }
+            } catch (error) {
+                console.error('预览失败:', error);
+                utils.showMessage('网络错误，请稍后重试', 'error');
+            } finally {
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = originalText;
+            }
+        }
+
+        // 导出报表
+        async function exportReport() {
+            const exportBtn = document.getElementById('exportBtn');
+            const originalText = exportBtn.innerHTML;
+            
+            try {
+                exportBtn.disabled = true;
+                exportBtn.innerHTML = '<div class="loading-spinner"></div> 导出中...';
+                
+                // 显示进度模态框
+                showExportModal();
+                
+                const formData = getFormData();
+                const reportType = document.querySelector('input[name="report_type"]:checked').value;
+                
+                // 根据报表类型选择不同的API端点
+                let apiEndpoint = '/api/reports/export';
+                let progressSteps = [];
+                
+                if (reportType === 'summary') {
+                    // 月度汇总表
+                    apiEndpoint = '/api/reports/export-summary';
+                    progressSteps = [
+                        { progress: 0, message: '开始生成汇总表...' },
+                        { progress: 30, message: '按类型分组统计...' },
+                        { progress: 60, message: '计算占比数据...' },
+                        { progress: 90, message: '生成Excel文件...' },
+                        { progress: 100, message: '汇总表生成完成！' }
+                    ];
+                } else {
+                    // 详细报表
+                    progressSteps = [
+                        { progress: 0, message: '开始导出...' },
+                        { progress: 20, message: '处理报销数据...' },
+                        { progress: 50, message: '处理图片附件...' },
+                        { progress: 80, message: '生成Excel文件...' },
+                        { progress: 100, message: '导出完成！' }
+                    ];
+                }
+                
+                // 创建表单数据用于文件下载
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = apiEndpoint;
+                form.style.display = 'none';
+                
+                // 对于汇总表，只需要时间范围参数
+                if (reportType === 'summary') {
+                    const summaryData = {
+                        start_date: formData.start_date,
+                        end_date: formData.end_date
+                    };
+                    
+                    Object.keys(summaryData).forEach(key => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = summaryData[key];
+                        form.appendChild(input);
+                    });
+                } else {
+                    Object.keys(formData).forEach(key => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = formData[key];
+                        form.appendChild(input);
+                    });
+                }
+                
+                document.body.appendChild(form);
+                
+                // 执行进度更新
+                for (let i = 0; i < progressSteps.length; i++) {
+                    setTimeout(() => {
+                        updateProgress(progressSteps[i].progress, progressSteps[i].message);
+                    }, i * 600);
+                }
+                
+                // 提交表单下载文件
+                setTimeout(() => {
+                    form.submit();
+                    document.body.removeChild(form);
+                    hideExportModal();
+                    utils.showMessage('报表导出完成！', 'success');
+                }, progressSteps.length * 600 + 500);
+                
+            } catch (error) {
+                console.error('导出失败:', error);
+                utils.showMessage('导出失败，请稍后重试', 'error');
+                hideExportModal();
+            } finally {
+                setTimeout(() => {
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = originalText;
+                }, 4000);
+            }
+        }
+
+        // 获取表单数据
+        function getFormData() {
+            const form = document.getElementById('reportForm');
+            const formData = new FormData(form);
+            const data = {};
+            
+            // 转换FormData为普通对象
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // 处理复选框
+            data.include_images = document.getElementById('includeImages').checked;
+            data.group_by_category = document.getElementById('groupByCategory').checked;
+            data.include_comments = document.getElementById('includeComments').checked;
+            
+            return data;
+        }
+
+        // 更新预览统计
+        function updatePreviewStats(data) {
+            document.getElementById('totalRecords').textContent = data.total_records || 0;
+            document.getElementById('totalCategories').textContent = data.total_categories || 0;
+            document.getElementById('totalAmount').textContent = `$ ${(data.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('withImages').textContent = data.with_images || 0;
+            
+            // 显示类型分布
+            const categoryPreview = document.getElementById('categoryPreview');
+            if (data.category_breakdown && data.category_breakdown.length > 0) {
+                categoryPreview.innerHTML = `
+                    <h4 style="margin: 16px 0 8px 0; font-size: 14px; font-weight: 600; color: var(--foreground);">按类型分布</h4>
+                    <div class="category-list">
+                        ${data.category_breakdown.map(cat => `
+                            <div class="category-item">
+                                <span class="category-name">${cat.category}</span>
+                                <span class="category-count">${cat.count} 条</span>
+                                <span class="category-amount">$ ${cat.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                categoryPreview.innerHTML = '<p style="color: var(--muted-foreground); font-size: 14px;">暂无数据</p>';
+            }
+        }
+
+        // 显示导出模态框
+        function showExportModal() {
+            document.getElementById('exportModal').classList.add('show');
+        }
+
+        // 隐藏导出模态框
+        function hideExportModal() {
+            document.getElementById('exportModal').classList.remove('show');
+        }
+
+        // 更新进度
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+
+        // 用户菜单切换
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('show');
+        }
+
+        // 点击外部关闭下拉菜单
+        document.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('userDropdown');
+            
+            if (!userMenu.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+    
+    <style>
+        /* 报表页面专用样式 */
+        .report-form {
+            padding: 0;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .form-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--foreground);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .checkbox-item:hover {
+            background-color: var(--muted);
+        }
+        
+        .checkmark {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 3px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            display: none;
+        }
+        
+        .checkbox-item input[type="checkbox"]:checked + .checkmark {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .checkbox-item input[type="checkbox"]:checked + .checkmark::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 1px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .checkbox-label {
+            font-size: 14px;
+            color: var(--foreground);
+            user-select: none;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 16px;
+            background: var(--muted);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        
+        .stat-value-large {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            padding: 16px;
+            background: var(--muted);
+            border-radius: 8px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            margin-top: 4px;
+        }
+        
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--muted);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .category-name {
+            font-weight: 500;
+            color: var(--foreground);
+        }
+        
+        .category-count {
+            color: var(--muted-foreground);
+        }
+        
+        .category-amount {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .export-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .progress-container {
+            margin-bottom: 16px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--muted);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: var(--foreground);
+            font-weight: 500;
+        }
+        
+        .export-details {
+            padding: 12px;
+            background: var(--muted);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--muted-foreground);
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .export-actions {
+                flex-direction: column;
+            }
+            
+            .category-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+        }
+    </style>
+</body>
+</html>
