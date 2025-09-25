@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import os
 import uuid
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 # 新增：导出依赖
 from openpyxl import Workbook
 from io import BytesIO
@@ -1248,6 +1249,169 @@ def cleanup_read_notifications():
     db.session.commit()
     
     return jsonify({'success': True, 'deleted_count': deleted_count})
+
+# 用户管理API
+@app.route('/api/admin/users', methods=['GET'])
+def get_all_users():
+    """获取所有用户（仅管理员）"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'error': '权限不足'}), 403
+    
+    users = User.query.all()
+    result = []
+    for user in users:
+        user_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role,
+            'created_at': user.created_at.isoformat() if hasattr(user, 'created_at') else None
+        }
+        result.append(user_data)
+    
+    return jsonify(result)
+
+@app.route('/api/admin/users', methods=['POST'])
+def create_user():
+    """创建新用户（仅管理员）"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'error': '权限不足'}), 403
+    
+    data = request.get_json()
+    
+    # 验证必需字段
+    if not data.get('username') or not data.get('email') or not data.get('password'):
+        return jsonify({'error': '用户名、邮箱和密码为必填项'}), 400
+    
+    # 检查用户名是否已存在
+    if User.query.filter_by(username=data['username']).first():
+        return jsonify({'error': '用户名已存在'}), 400
+    
+    # 检查邮箱是否已存在
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({'error': '邮箱已存在'}), 400
+    
+    # 验证角色
+    role = data.get('role', 'user')
+    if role not in ['user', 'admin']:
+        return jsonify({'error': '无效的角色'}), 400
+    
+    try:
+        # 创建新用户
+        new_user = User(
+            username=data['username'],
+            email=data['email'],
+            password=generate_password_hash(data['password']),
+            role=role
+        )
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '用户创建成功',
+            'user': {
+                'id': new_user.id,
+                'username': new_user.username,
+                'email': new_user.email,
+                'role': new_user.role
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'创建用户失败: {str(e)}'}), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    """更新用户信息（仅管理员）"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'error': '权限不足'}), 403
+    
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+    
+    try:
+        # 更新用户名
+        if 'username' in data and data['username'] != user.username:
+            if User.query.filter_by(username=data['username']).first():
+                return jsonify({'error': '用户名已存在'}), 400
+            user.username = data['username']
+        
+        # 更新邮箱
+        if 'email' in data and data['email'] != user.email:
+            if User.query.filter_by(email=data['email']).first():
+                return jsonify({'error': '邮箱已存在'}), 400
+            user.email = data['email']
+        
+        # 更新角色
+        if 'role' in data:
+            if data['role'] not in ['user', 'admin']:
+                return jsonify({'error': '无效的角色'}), 400
+            # 防止删除最后一个管理员
+            if user.role == 'admin' and data['role'] != 'admin':
+                admin_count = User.query.filter_by(role='admin').count()
+                if admin_count <= 1:
+                    return jsonify({'error': '不能删除最后一个管理员'}), 400
+            user.role = data['role']
+        
+        # 更新密码
+        if 'password' in data and data['password']:
+            user.password = generate_password_hash(data['password'])
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': '用户更新成功',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'role': user.role
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'更新用户失败: {str(e)}'}), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """删除用户（仅管理员）"""
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return jsonify({'error': '权限不足'}), 403
+    
+    # 不能删除自己
+    if user_id == session.get('user_id'):
+        return jsonify({'error': '不能删除自己的账户'}), 400
+    
+    user = User.query.get_or_404(user_id)
+    
+    # 防止删除最后一个管理员
+    if user.role == 'admin':
+        admin_count = User.query.filter_by(role='admin').count()
+        if admin_count <= 1:
+            return jsonify({'error': '不能删除最后一个管理员'}), 400
+    
+    try:
+        # 检查用户是否有相关的费用记录
+        expense_count = Expense.query.filter_by(user_id=user_id).count()
+        if expense_count > 0:
+            return jsonify({'error': f'该用户有 {expense_count} 条费用记录，无法删除'}), 400
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'用户 {user.username} 删除成功'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'删除用户失败: {str(e)}'}), 500
 
 # 货币管理API
 @app.route('/api/currencies')

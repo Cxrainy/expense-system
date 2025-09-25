@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user-management.css') }}">
 </head>
 <body class="dashboard-page">
     <!-- 侧边栏 -->
@@ -212,6 +213,49 @@
                     </div>
                 </div>
 
+                <!-- 用户管理 -->
+                <div class="stat-panel-ex">
+                    <div class="panel-header">
+                        <h3 class="panel-title">
+                            <svg class="panel-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            用户管理
+                        </h3>
+                        <button class="btn btn-primary btn-sm" onclick="showAddUserModal()">添加用户</button>
+                    </div>
+                    
+                    <!-- 用户搜索 -->
+                    <div class="search-filters">
+                        <div class="search-box">
+                            <input type="text" id="userSearch" placeholder="搜索用户名或邮箱..." oninput="filterUsers()">
+                            <button type="button" class="search-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <select id="roleFilter" onchange="filterUsers()">
+                            <option value="">所有角色</option>
+                            <option value="admin">管理员</option>
+                            <option value="user">普通用户</option>
+                        </select>
+                    </div>
+                    
+                    <div class="panel-content">
+                        <div id="usersList" class="admin-list">
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <span>加载中...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 数据库管理 -->
                 <div class="stat-panel-ex database-management">
                     <div class="panel-header">
@@ -345,6 +389,89 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeAddCategoryModal()">取消</button>
                 <button class="btn btn-primary" onclick="addCategory()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户模态框 -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">添加用户</h3>
+                <button class="modal-close" onclick="closeAddUserModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label class="form-label">用户名 <span style="color: var(--destructive);">*</span></label>
+                        <input type="text" id="newUserUsername" class="form-input" placeholder="如: zhang_san" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱 <span style="color: var(--destructive);">*</span></label>
+                        <input type="email" id="newUserEmail" class="form-input" placeholder="如: zhangsan@company.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">密码 <span style="color: var(--destructive);">*</span></label>
+                        <input type="password" id="newUserPassword" class="form-input" placeholder="至少6位字符" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">确认密码 <span style="color: var(--destructive);">*</span></label>
+                        <input type="password" id="newUserPasswordConfirm" class="form-input" placeholder="再次输入密码" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色</label>
+                        <select id="newUserRole" class="form-select">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddUserModal()">取消</button>
+                <button class="btn btn-primary" onclick="addUser()">添加用户</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div class="modal" id="editUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑用户</h3>
+                <button class="modal-close" onclick="closeEditUserModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-group">
+                        <label class="form-label">用户名 <span style="color: var(--destructive);">*</span></label>
+                        <input type="text" id="editUserUsername" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱 <span style="color: var(--destructive);">*</span></label>
+                        <input type="email" id="editUserEmail" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">新密码 <span style="color: var(--muted-foreground); font-size: 12px;">(留空则不修改)</span></label>
+                        <input type="password" id="editUserPassword" class="form-input" placeholder="输入新密码或留空不修改">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">确认新密码</label>
+                        <input type="password" id="editUserPasswordConfirm" class="form-input" placeholder="再次输入新密码">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色</label>
+                        <select id="editUserRole" class="form-select">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditUserModal()">取消</button>
+                <button class="btn btn-primary" onclick="updateUser()">保存修改</button>
             </div>
         </div>
     </div>
@@ -1232,10 +1359,218 @@
             }
         }
 
+        // 用户管理功能
+        let users = [];
+        let filteredUsers = [];
+        let currentUserId = {{ session.user_id if session.user_id else 'null' }};
+
+        // 加载用户列表
+        async function loadUsers() {
+            const container = document.getElementById('usersList');
+            
+            try {
+                users = await api.get('/api/admin/users');
+                filteredUsers = users;
+                
+                if (users.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>暂无用户</p></div>';
+                    return;
+                }
+                
+                renderUsers(filteredUsers);
+                
+            } catch (error) {
+                console.error('加载用户失败:', error);
+                container.innerHTML = '<div class="empty-state error"><p>加载失败，请稍后重试</p></div>';
+            }
+        }
+
+        // 渲染用户列表
+        function renderUsers(userList) {
+            const container = document.getElementById('usersList');
+            
+            const html = userList.map(user => {
+                const roleIcon = user.role === 'admin' ? '👑' : '👤';
+                const roleName = user.role === 'admin' ? '管理员' : '普通用户';
+                const roleClass = user.role === 'admin' ? 'admin' : 'user';
+                
+                return `
+                    <div class="admin-item">
+                        <div class="item-info">
+                            <div class="item-main">
+                                <span class="item-name">${roleIcon} ${user.username}</span>
+                                <div class="item-details">
+                                    <span class="item-detail">${user.email}</span>
+                                    <span class="badge badge-${roleClass}">${roleName}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-sm btn-outline" onclick="editUser(${user.id})">编辑</button>
+                            ${user.id !== ${JSON.stringify(currentUserId)} ? `<button class="btn btn-sm btn-destructive" onclick="deleteUser(${user.id}, '${user.username}')">删除</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // 筛选用户
+        function filterUsers() {
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+            const roleFilter = document.getElementById('roleFilter').value;
+            
+            filteredUsers = users.filter(user => {
+                const matchesSearch = user.username.toLowerCase().includes(searchTerm) || 
+                                    user.email.toLowerCase().includes(searchTerm);
+                const matchesRole = !roleFilter || user.role === roleFilter;
+                
+                return matchesSearch && matchesRole;
+            });
+            
+            renderUsers(filteredUsers);
+        }
+
+        // 显示添加用户模态框
+        function showAddUserModal() {
+            document.getElementById('addUserModal').classList.add('show');
+        }
+
+        // 关闭添加用户模态框
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').classList.remove('show');
+            document.getElementById('addUserForm').reset();
+        }
+
+        // 添加用户
+        async function addUser() {
+            const username = document.getElementById('newUserUsername').value;
+            const email = document.getElementById('newUserEmail').value;
+            const password = document.getElementById('newUserPassword').value;
+            const passwordConfirm = document.getElementById('newUserPasswordConfirm').value;
+            const role = document.getElementById('newUserRole').value;
+            
+            // 验证输入
+            if (!username || !email || !password) {
+                utils.showMessage('请填写所有必填字段', 'error');
+                return;
+            }
+            
+            if (password !== passwordConfirm) {
+                utils.showMessage('两次输入的密码不一致', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                utils.showMessage('密码长度不能少于6位', 'error');
+                return;
+            }
+            
+            try {
+                await api.post('/api/admin/users', {
+                    username, email, password, role
+                });
+                
+                utils.showMessage('用户添加成功', 'success');
+                closeAddUserModal();
+                loadUsers();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '添加失败', 'error');
+            }
+        }
+
+        // 编辑用户
+        async function editUser(id) {
+            try {
+                const user = users.find(u => u.id === id);
+                if (!user) return;
+                
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editUserUsername').value = user.username;
+                document.getElementById('editUserEmail').value = user.email;
+                document.getElementById('editUserRole').value = user.role;
+                document.getElementById('editUserPassword').value = '';
+                document.getElementById('editUserPasswordConfirm').value = '';
+                
+                document.getElementById('editUserModal').classList.add('show');
+                
+            } catch (error) {
+                utils.showMessage(error.message || '获取用户信息失败', 'error');
+            }
+        }
+
+        // 关闭编辑用户模态框
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').classList.remove('show');
+            document.getElementById('editUserForm').reset();
+        }
+
+        // 更新用户
+        async function updateUser() {
+            const id = document.getElementById('editUserId').value;
+            const username = document.getElementById('editUserUsername').value;
+            const email = document.getElementById('editUserEmail').value;
+            const password = document.getElementById('editUserPassword').value;
+            const passwordConfirm = document.getElementById('editUserPasswordConfirm').value;
+            const role = document.getElementById('editUserRole').value;
+            
+            // 验证输入
+            if (!username || !email) {
+                utils.showMessage('用户名和邮箱不能为空', 'error');
+                return;
+            }
+            
+            // 如果输入了密码，验证密码
+            if (password && password !== passwordConfirm) {
+                utils.showMessage('两次输入的密码不一致', 'error');
+                return;
+            }
+            
+            if (password && password.length < 6) {
+                utils.showMessage('密码长度不能少于6位', 'error');
+                return;
+            }
+            
+            try {
+                const updateData = { username, email, role };
+                if (password) {
+                    updateData.password = password;
+                }
+                
+                await api.put(`/api/admin/users/${id}`, updateData);
+                
+                utils.showMessage('用户更新成功', 'success');
+                closeEditUserModal();
+                loadUsers();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '更新失败', 'error');
+            }
+        }
+
+        // 删除用户
+        async function deleteUser(id, username) {
+            if (!confirm(`确定要删除用户"${username}"吗？此操作不可撤销。`)) {
+                return;
+            }
+            
+            try {
+                await api.delete(`/api/admin/users/${id}`);
+                utils.showMessage('用户删除成功', 'success');
+                loadUsers();
+                
+            } catch (error) {
+                utils.showMessage(error.message || '删除失败', 'error');
+            }
+        }
+
         // 页面初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadCurrencies();
             loadCategories();
+            loadUsers();
             refreshDatabaseStats();
             
             // 点击其他地方关闭用户菜单
@@ -1256,6 +1591,18 @@
             document.getElementById('addCategoryModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     closeAddCategoryModal();
+                }
+            });
+
+            document.getElementById('addUserModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeAddUserModal();
+                }
+            });
+
+            document.getElementById('editUserModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeEditUserModal();
                 }
             });
 
