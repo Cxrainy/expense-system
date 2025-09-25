@@ -245,7 +245,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="newExpenseForm">
+                <form id="newExpenseForm" onsubmit="return handleFormSubmit(event)">
                     <div class="form-group">
                         <label for="expenseTitle" class="form-label">申请标题</label>
                         <input type="text" id="expenseTitle" class="form-input" placeholder="请输入申请标题" required>
@@ -326,7 +326,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeNewExpenseModal()">取消</button>
-                <button class="btn btn-primary" onclick="submitExpense()" id="submitBtn">提交申请</button>
+                <button type="submit" form="newExpenseForm" class="btn btn-primary" id="submitBtn">提交申请</button>
             </div>
         </div>
     </div>
@@ -672,6 +672,12 @@
             }
         }
 
+        // 处理表单提交（保留HTML5验证）
+        async function handleFormSubmit(event) {
+            event.preventDefault(); // 阻止默认表单提交
+            return await submitExpense();
+        }
+
         // 提交报销申请
         async function submitExpense() {
             const submitBtn = document.getElementById('submitBtn');
@@ -724,15 +730,9 @@
                     description: description
                 });
                 
-                if (!title || !category || !amount || !currency || !exchangeRate || !expense_date || !description) {
-                    utils.showMessage('请填写所有必填字段（包括费用说明）', 'error');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                    return;
-                }
-                
+                // HTML5已经验证了required字段，这里只需要验证自定义规则
                 // 验证备注长度
-                if (description.trim().length < 5) {
+                if (description && description.trim().length < 5) {
                     utils.showMessage('费用说明至少需要5个字符', 'error');
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
