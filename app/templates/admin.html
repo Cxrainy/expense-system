@@ -156,7 +156,13 @@
             <div class="content-header">
                 <div class="header-left">
                     <h1>系统管理</h1>
-                    <p class="page-subtitle">管理系统的货币和分类配置</p>
+                    <p class="page-subtitle">管理系统的用户、货币和分类配置</p>
+                </div>
+                <div class="header-right">
+                    <div class="admin-status">
+                        <span class="status-indicator online"></span>
+                        <span>管理员模式</span>
+                    </div>
                 </div>
             </div>
 
@@ -798,7 +804,9 @@
             const container = document.getElementById('currenciesList');
             
             try {
+                console.log('🔄 开始加载货币列表...');
                 currencies = await api.get('/api/admin/currencies');
+                console.log('✅ 货币列表加载成功:', currencies.length, '条记录');
                 filteredCurrencies = currencies;
                 
                 if (currencies.length === 0) {
@@ -809,8 +817,12 @@
                 renderCurrencies(currencies);
                 
             } catch (error) {
-                console.error('加载货币列表失败:', error);
-                container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+                console.error('❌ 加载货币列表失败:', error);
+                if (error.status === 403) {
+                    container.innerHTML = '<div class="empty-state error"><p>❌ 权限不足：您需要管理员权限才能访问此功能</p></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state error"><p>❌ 加载失败：' + (error.message || '网络错误') + '</p></div>';
+                }
             }
         }
 
@@ -1369,7 +1381,9 @@
             const container = document.getElementById('usersList');
             
             try {
+                console.log('🔄 开始加载用户列表...');
                 users = await api.get('/api/admin/users');
+                console.log('✅ 用户列表加载成功:', users.length, '条记录');
                 filteredUsers = users;
                 
                 if (users.length === 0) {
@@ -1380,8 +1394,12 @@
                 renderUsers(filteredUsers);
                 
             } catch (error) {
-                console.error('加载用户失败:', error);
-                container.innerHTML = '<div class="empty-state error"><p>加载失败，请稍后重试</p></div>';
+                console.error('❌ 加载用户列表失败:', error);
+                if (error.status === 403) {
+                    container.innerHTML = '<div class="empty-state error"><p>❌ 权限不足：您需要管理员权限才能访问此功能</p></div>';
+                } else {
+                    container.innerHTML = '<div class="empty-state error"><p>❌ 加载失败：' + (error.message || '网络错误') + '</p></div>';
+                }
             }
         }
 

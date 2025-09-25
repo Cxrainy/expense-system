@@ -14,7 +14,7 @@ class PaginationManager {
             onPageChange: null,
             showInfo: true,
             showPageSize: true,
-            pageSizeOptions: [10, 20, 50, 100],
+            pageSizeOptions: [5, 10, 20, 50, 100],
             ...options
         };
         

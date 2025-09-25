@@ -227,7 +227,7 @@ def login():
     
     user = User.query.filter_by(email=email).first()
     
-    if user and user.password == password:  # 在生产环境中应该使用密码哈希
+    if user and check_password_hash(user.password, password):
         session['user_id'] = user.id
         session['username'] = user.username
         session['role'] = user.role
