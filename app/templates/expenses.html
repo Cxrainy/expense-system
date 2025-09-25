@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/advanced-filters.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pagination.css') }}">
 </head>
 <body class="dashboard-page">
     <!-- 侧边栏 -->
@@ -221,6 +222,9 @@
                     </div>
                 </div>
 
+                <!-- 分页容器 -->
+                <div id="expensesPagination"></div>
+
                 <!-- 空状态 -->
                 <div id="emptyExpenses" class="empty-state hidden">
                     <div class="empty-icon">📝</div>
@@ -335,6 +339,7 @@
     <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
     <script src="{{ url_for('static', filename='js/file-preview.js') }}"></script>
     <script src="{{ url_for('static', filename='js/advanced-filters.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pagination.js') }}"></script>
     <script>
         let currentStatus = 'all';
         let currentCurrency = 'all'; // 货币筛选
@@ -344,6 +349,7 @@
         let selectedFiles = [];
         let currentEditingId = null;
         let advancedFilters; // 高级筛选组件
+        let expensesPagination; // 分页管理器
 
         // 动态加载货币和分类选项
         async function loadFormOptions() {
@@ -674,7 +680,25 @@
 
         // 处理表单提交（保留HTML5验证）
         async function handleFormSubmit(event) {
+            console.log('🔥 handleFormSubmit called - form submitted!');
+            
+            // 手动检查表单验证状态
+            const form = document.getElementById('newExpenseForm');
+            const isValid = form.checkValidity();
+            console.log('📋 Form validation status:', isValid);
+            
+            if (!isValid) {
+                console.log('❌ Form validation failed');
+                form.reportValidity(); // 显示验证错误
+                return false;
+            }
+            
             event.preventDefault(); // 阻止默认表单提交
+            
+            // 检查费用说明字段
+            const description = document.getElementById('expenseDescription').value;
+            console.log('📝 Description value:', description);
+            
             return await submitExpense();
         }
 
@@ -1040,8 +1064,8 @@
             loadExpenses();
         }
 
-        // 加载报销数据
-        async function loadExpenses() {
+        // 加载报销数据 - 支持分页
+        async function loadExpenses(paginationParams = null) {
             const list = document.getElementById('expensesList');
             const emptyState = document.getElementById('emptyExpenses');
             
@@ -1049,22 +1073,58 @@
             emptyState.classList.add('hidden');
             
             try {
-                // 加载所有数据
-                expenses = await api.get('/api/expenses?status=all');
+                let url = '/api/expenses?status=all';
                 
-                // 如果存在筛选条件，优先应用筛选，避免被“显示全部”覆盖
-                if (advancedFilters && Object.keys(advancedFilters.getFilters()).length > 0) {
+                // 添加分页参数
+                if (paginationParams) {
+                    url += `&page=${paginationParams.page}&per_page=${paginationParams.perPage}`;
+                }
+                
+                const response = await api.get(url);
+                
+                // 判断响应格式：新的分页格式 vs 旧的数组格式
+                if (response.data && response.pagination) {
+                    // 新的分页格式
+                    expenses = response.data;
+                    
+                    // 更新分页UI
+                    if (!expensesPagination) {
+                        // 初始化分页管理器
+                        expensesPagination = new PaginationManager('expensesPagination', {
+                            perPage: 20,
+                            onPageChange: (params) => {
+                                console.log('📄 页面变更:', params);
+                                loadExpenses(params);
+                            }
+                        });
+                    }
+                    expensesPagination.update(response.pagination);
+                } else {
+                    // 向后兼容旧格式
+                    expenses = response;
+                    // 隐藏分页UI
+                    if (expensesPagination) {
+                        expensesPagination.reset();
+                    }
+                }
+                
+                // 如果存在筛选条件，优先应用筛选（注意：分页模式下筛选在服务端进行）
+                if (advancedFilters && Object.keys(advancedFilters.getFilters()).length > 0 && !paginationParams) {
                     applyAdvancedFilters(advancedFilters.getFilters());
                     updateStats();
                     return;
                 }
                 
-                // 初始化时显示所有数据
+                // 显示数据
                 filteredExpenses = expenses;
                 
                 if (expenses.length === 0) {
                     list.innerHTML = '';
                     emptyState.classList.remove('hidden');
+                    // 隐藏分页
+                    if (expensesPagination) {
+                        expensesPagination.reset();
+                    }
                 } else {
                     renderExpenses(filteredExpenses);
                     emptyState.classList.add('hidden');
@@ -1073,6 +1133,7 @@
                 updateStats();
                 updateResultsCount(filteredExpenses.length);
             } catch (error) {
+                console.error('加载报销数据失败:', error);
                 list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>加载失败</h3><p>无法加载报销数据，请稍后重试</p><button class="btn btn-primary btn-sm" onclick="loadExpenses()">重试</button></div>';
             }
         }

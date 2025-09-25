@@ -183,8 +183,8 @@
                             <div class="form-group">
                                 <label for="imageQuality" class="form-label">图片质量</label>
                                 <select id="imageQuality" name="image_quality" class="form-select">
-                                    <option value="high">高质量（原图）</option>
-                                    <option value="medium" selected>中等质量（推荐）</option>
+                                    <option value="high" selected>高质量（推荐）</option>
+                                    <option value="medium">中等质量</option>
                                     <option value="low">低质量（压缩）</option>
                                 </select>
                             </div>
@@ -578,7 +578,7 @@
         function updatePreviewStats(data) {
             document.getElementById('totalRecords').textContent = data.total_records || 0;
             document.getElementById('totalCategories').textContent = data.total_categories || 0;
-            document.getElementById('totalAmount').textContent = `$ ${(data.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            document.getElementById('totalAmount').textContent = `${(data.total_amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             document.getElementById('withImages').textContent = data.with_images || 0;
             
             // 显示类型分布

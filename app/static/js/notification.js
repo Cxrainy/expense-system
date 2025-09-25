@@ -17,10 +17,15 @@ class NotificationManager {
         this.loadNotifications();
         this.loadUnreadCount();
         
-        // 定期更新未读计数
+        // 定期更新未读计数 - 优化频率
         setInterval(() => {
             this.loadUnreadCount();
-        }, 30000); // 30秒更新一次
+        }, 120000); // 2分钟更新一次，减少服务器压力
+        
+        // 定期清理已读通知 - 10分钟清理一次
+        setInterval(() => {
+            this.cleanupReadNotifications();
+        }, 600000); // 10分钟清理一次
     }
 
     createNotificationElements() {
@@ -337,6 +342,29 @@ class NotificationManager {
         // 可以在这里添加实时通知显示逻辑
         console.log('新通知:', notification);
         this.loadUnreadCount();
+    }
+    
+    // 清理已读通知
+    async cleanupReadNotifications() {
+        try {
+            const response = await fetch('/api/notifications/cleanup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.deleted_count > 0) {
+                    console.log(`🧹 已清理 ${result.deleted_count} 条过期通知`);
+                    // 清理后重新加载通知列表
+                    this.loadNotifications();
+                }
+            }
+        } catch (error) {
+            console.error('清理通知失败:', error);
+        }
     }
 }
 

@@ -4,7 +4,7 @@
 """
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory, send_file
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import uuid
 from werkzeug.utils import secure_filename
@@ -78,6 +78,7 @@ class Notification(db.Model):
     type = db.Column(db.String(20), default='info')  # info/success/warning/error
     related_expense_id = db.Column(db.Integer, db.ForeignKey('expense.id'), nullable=True)
     is_read = db.Column(db.Boolean, default=False)
+    read_at = db.Column(db.DateTime, nullable=True)  # 已读时间，用于自动清理
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # 关系
@@ -437,7 +438,7 @@ def approval_detail(expense_id):
 # API 端点
 @app.route('/api/expenses', methods=['GET'])
 def get_expenses():
-    """获取报销记录"""
+    """获取报销记录 - 支持分页"""
     if 'user_id' not in session:
         return jsonify({'error': '未登录'}), 401
     
@@ -446,7 +447,14 @@ def get_expenses():
     status = request.args.get('status', 'all')
     currency = request.args.get('currency', 'all')  # 货币筛选
     category = request.args.get('category', 'all')  # 新增分类筛选
-    limit = request.args.get('limit', type=int)  # 添加limit参数支持
+    
+    # 分页参数
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)  # 默认每页20条
+    limit = request.args.get('limit', type=int)  # 保持向后兼容
+    
+    # 限制每页最大数量，防止恶意请求
+    per_page = min(per_page, 100)
     
     query = Expense.query
     
@@ -466,12 +474,41 @@ def get_expenses():
     if category and category != 'all':
         query = query.filter_by(category=category)
     
-    # 排序并应用限制
+    # 排序
     query = query.order_by(Expense.created_at.desc())
-    if limit:
-        query = query.limit(limit)
     
-    expenses = query.all()
+    # 如果有limit参数，使用旧的逻辑（向后兼容）
+    if limit:
+        expenses = query.limit(limit).all()
+        # 构建旧格式的响应
+        result = []
+        for expense in expenses:
+            result.append({
+                'id': expense.id,
+                'title': expense.title,
+                'description': expense.description,
+                'amount': float(expense.amount),
+                'currency': expense.currency,
+                'exchange_rate': float(expense.exchange_rate),
+                'usd_amount': float(expense.usd_amount),
+                'category': expense.category,
+                'expense_date': expense.expense_date.isoformat(),
+                'status': expense.status,
+                'approval_comment': expense.approval_comment,
+                'created_at': expense.created_at.isoformat(),
+                'submitter': expense.submitter.username if expense.submitter else '未知用户',
+                'files_count': len(expense.files)
+            })
+        return jsonify(result)
+    
+    # 新的分页逻辑
+    paginated = query.paginate(
+        page=page, 
+        per_page=per_page, 
+        error_out=False
+    )
+    
+    expenses = paginated.items
     
     result = []
     for expense in expenses:
@@ -500,7 +537,20 @@ def get_expenses():
         }
         result.append(expense_data)
     
-    return jsonify(result)
+    # 返回分页信息
+    return jsonify({
+        'data': result,
+        'pagination': {
+            'page': paginated.page,
+            'per_page': paginated.per_page,
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'has_prev': paginated.has_prev,
+            'has_next': paginated.has_next,
+            'prev_num': paginated.prev_num,
+            'next_num': paginated.next_num
+        }
+    })
 
 @app.route('/api/expenses', methods=['POST'])
 def create_expense():
@@ -1169,10 +1219,35 @@ def mark_all_notifications_read():
         return jsonify({'error': '未登录'}), 401
     
     user_id = session['user_id']
-    Notification.query.filter_by(user_id=user_id, is_read=False).update({'is_read': True})
+    notifications = Notification.query.filter_by(user_id=user_id, is_read=False).all()
+    
+    for notification in notifications:
+        notification.is_read = True
+        notification.read_at = datetime.utcnow()  # 记录已读时间
+    
     db.session.commit()
     
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'marked_count': len(notifications)})
+
+@app.route('/api/notifications/cleanup', methods=['POST'])
+def cleanup_read_notifications():
+    """清理一小时前的已读通知"""
+    if 'user_id' not in session:
+        return jsonify({'error': '未登录'}), 401
+    
+    user_id = session['user_id']
+    # 删除1小时前已读的通知
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    
+    deleted_count = Notification.query.filter(
+        Notification.user_id == user_id,
+        Notification.is_read == True,
+        Notification.read_at < one_hour_ago
+    ).delete()
+    
+    db.session.commit()
+    
+    return jsonify({'success': True, 'deleted_count': deleted_count})
 
 # 货币管理API
 @app.route('/api/currencies')
@@ -1522,8 +1597,8 @@ def export_expenses():
     )
 
 # 报表相关API
-def process_image_for_excel(image_path, quality='medium'):
-    """处理图片用于Excel嵌入，返回处理后的图片数据和尺寸"""
+def process_image_for_excel(image_path, quality='high'):
+    """处理图片用于Excel嵌入，返回处理后的图片数据和尺寸 - 优化版本保持高清晰度"""
     try:
         if not os.path.exists(image_path):
             return None, None, None
@@ -1538,64 +1613,101 @@ def process_image_for_excel(image_path, quality='medium'):
             original_width, original_height = img.size
             aspect_ratio = original_width / original_height
             
-            # 根据质量设置计算目标尺寸 - 更合理的尺寸设置
-            if quality == 'high':
-                # 高质量：适中尺寸，保证清晰度
-                target_width, target_height = 300, 200
-            elif quality == 'low':
-                # 低质量：小尺寸，节省空间
-                target_width, target_height = 150, 100
-            else:  # medium
-                # 中等质量：平衡尺寸和质量
-                target_width, target_height = 200, 150
+            print(f"🖼️ 处理图片: {image_path}")
+            print(f"📏 原始尺寸: {original_width}x{original_height}")
+            print(f"📐 宽高比: {aspect_ratio:.2f}")
             
-            # 智能计算最终尺寸，保持宽高比
-            if aspect_ratio > 1.5:  # 宽图片（如横向照片）
-                final_width = target_width
-                final_height = target_width / aspect_ratio
-                # 限制最大高度
-                if final_height > target_height:
-                    final_height = target_height
-                    final_width = target_height * aspect_ratio
-            elif aspect_ratio < 0.75:  # 高图片（如纵向照片）
-                final_height = target_height
-                final_width = target_height * aspect_ratio
-                # 限制最大宽度
-                if final_width > target_width:
+            # 🎯 大幅提升目标尺寸，保持高清晰度
+            if quality == 'high':
+                # 高质量：大尺寸，最佳清晰度 - 增加50%
+                target_width, target_height = 500, 350
+            elif quality == 'low':
+                # 低质量：中等尺寸，仍然清晰 - 增加100%
+                target_width, target_height = 300, 200
+            else:  # medium
+                # 中等质量：较大尺寸，清晰度优先 - 增加100%
+                target_width, target_height = 400, 280
+            
+            # 🔍 如果原图很小，直接使用原图尺寸避免放大模糊
+            if original_width <= target_width and original_height <= target_height:
+                final_width = original_width
+                final_height = original_height
+                print(f"✨ 原图较小，保持原始尺寸: {final_width}x{final_height}")
+            else:
+                # 智能计算最终尺寸，保持宽高比
+                if aspect_ratio > 1.5:  # 宽图片（如横向照片）
                     final_width = target_width
                     final_height = target_width / aspect_ratio
-            else:  # 接近正方形的图片
-                # 使用较小的目标尺寸以保持比例
-                min_dimension = min(target_width, target_height)
-                if aspect_ratio >= 1:
-                    final_width = min_dimension
-                    final_height = min_dimension / aspect_ratio
-                else:
-                    final_height = min_dimension
-                    final_width = min_dimension * aspect_ratio
+                    # 限制最大高度
+                    if final_height > target_height:
+                        final_height = target_height
+                        final_width = target_height * aspect_ratio
+                elif aspect_ratio < 0.75:  # 高图片（如纵向照片）
+                    final_height = target_height
+                    final_width = target_height * aspect_ratio
+                    # 限制最大宽度
+                    if final_width > target_width:
+                        final_width = target_width
+                        final_height = target_width / aspect_ratio
+                else:  # 接近正方形的图片
+                    # 使用较小的目标尺寸以保持比例
+                    min_dimension = min(target_width, target_height)
+                    if aspect_ratio >= 1:
+                        final_width = min_dimension
+                        final_height = min_dimension / aspect_ratio
+                    else:
+                        final_height = min_dimension
+                        final_width = min_dimension * aspect_ratio
+                
+                # 确保尺寸不会太小 - 提高最小尺寸
+                final_width = max(final_width, 120)
+                final_height = max(final_height, 90)
+                
+                print(f"🎯 目标尺寸: {final_width:.0f}x{final_height:.0f}")
             
-            # 确保尺寸不会太小
-            final_width = max(final_width, 80)
-            final_height = max(final_height, 60)
+            # 🚀 优化图片处理流程
+            if final_width != original_width or final_height != original_height:
+                # 只在需要时才调整大小，使用最高质量重采样
+                final_size = (int(final_width), int(final_height))
+                
+                # 如果是缩小操作，使用超采样技术提高质量
+                if final_width < original_width:
+                    # 先轻微缩小到1.5倍目标尺寸，再缩小到最终尺寸
+                    intermediate_size = (int(final_width * 1.5), int(final_height * 1.5))
+                    img = img.resize(intermediate_size, Image.Resampling.LANCZOS)
+                
+                img = img.resize(final_size, Image.Resampling.LANCZOS)
+                print(f"✅ 图片已调整为: {final_size[0]}x{final_size[1]}")
+            else:
+                print(f"✅ 保持原始尺寸")
             
-            # 调整图片尺寸 - 使用高质量重采样
-            target_size = (int(final_width * 2), int(final_height * 2))  # 先放大2倍
-            img = img.resize(target_size, Image.Resampling.LANCZOS)
-            
-            # 再缩小到最终尺寸，提高图片质量
-            final_size = (int(final_width), int(final_height))
-            img = img.resize(final_size, Image.Resampling.LANCZOS)
-            
-            # 保存到内存
+            # 💾 高质量保存到内存
             img_buffer = BytesIO()
-            save_quality = 95 if quality == 'high' else (85 if quality == 'medium' else 70)
-            img.save(img_buffer, format='JPEG', quality=save_quality, optimize=True)
+            # 大幅提升压缩质量
+            if quality == 'high':
+                save_quality = 98  # 几乎无损
+                save_format = 'PNG'  # 高质量用PNG
+            elif quality == 'medium':
+                save_quality = 95  # 高质量JPEG
+                save_format = 'JPEG'
+            else:  # low
+                save_quality = 90  # 中高质量JPEG
+                save_format = 'JPEG'
+            
+            if save_format == 'PNG':
+                img.save(img_buffer, format='PNG', optimize=True)
+            else:
+                img.save(img_buffer, format='JPEG', quality=save_quality, optimize=True)
+            
             img_buffer.seek(0)
+            
+            print(f"💾 保存格式: {save_format}, 质量: {save_quality if save_format == 'JPEG' else 'PNG无损'}")
+            print(f"📦 文件大小: {len(img_buffer.getvalue()) / 1024:.1f} KB")
             
             return img_buffer, final_width, final_height
             
     except Exception as e:
-        print(f"图片处理失败: {e}")
+        print(f"❌ 图片处理失败: {e}")
         return None, None, None
 
 @app.route('/api/reports/preview', methods=['POST'])
