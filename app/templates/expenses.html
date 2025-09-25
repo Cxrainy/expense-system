@@ -302,8 +302,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="expenseDescription" class="form-label">费用说明</label>
-                        <textarea id="expenseDescription" class="form-textarea" placeholder="请详细说明费用用途和详情" rows="3"></textarea>
+                        <label for="expenseDescription" class="form-label">费用说明 <span style="color: var(--destructive);">*</span></label>
+                        <textarea id="expenseDescription" class="form-textarea" placeholder="请详细说明费用用途和详情" rows="3" required></textarea>
                     </div>
                     
                     <div class="form-group">
@@ -709,9 +709,16 @@
                 const currency = formData.get('currency');
                 const exchangeRate = formData.get('exchange_rate');
                 const expense_date = formData.get('expense_date');
+                const description = formData.get('description');
                 
-                if (!title || !category || !amount || !currency || !exchangeRate || !expense_date) {
-                    utils.showMessage('请填写所有必填字段', 'error');
+                if (!title || !category || !amount || !currency || !exchangeRate || !expense_date || !description) {
+                    utils.showMessage('请填写所有必填字段（包括费用说明）', 'error');
+                    return;
+                }
+                
+                // 验证备注长度
+                if (description.trim().length < 5) {
+                    utils.showMessage('费用说明至少需要5个字符', 'error');
                     return;
                 }
                 

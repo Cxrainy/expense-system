@@ -525,9 +525,13 @@ def create_expense():
     category = request.form.get('category')
     expense_date = request.form.get('expense_date')
     
-    # 验证必填字段
-    if not all([title, amount, currency, exchange_rate, category, expense_date]):
-        return jsonify({'error': '请填写所有必填字段'}), 400
+    # 验证必填字段（包括备注）
+    if not all([title, description, amount, currency, exchange_rate, category, expense_date]):
+        return jsonify({'error': '请填写所有必填字段（包括费用说明）'}), 400
+    
+    # 验证备注长度
+    if len(description.strip()) < 5:
+        return jsonify({'error': '费用说明至少需要5个字符'}), 400
     
     try:
         amount = float(amount)
@@ -689,9 +693,13 @@ def update_expense(expense_id):
     category = request.form.get('category')
     expense_date = request.form.get('expense_date')
     
-    # 验证必填字段
-    if not all([title, amount, currency, exchange_rate, category, expense_date]):
-        return jsonify({'error': '请填写所有必填字段'}), 400
+    # 验证必填字段（包括备注）
+    if not all([title, description, amount, currency, exchange_rate, category, expense_date]):
+        return jsonify({'error': '请填写所有必填字段（包括费用说明）'}), 400
+    
+    # 验证备注长度
+    if len(description.strip()) < 5:
+        return jsonify({'error': '费用说明至少需要5个字符'}), 400
     
     try:
         amount = float(amount)
