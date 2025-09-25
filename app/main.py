@@ -486,7 +486,7 @@ def get_expenses():
             'category': expense.category,
             'expense_date': expense.expense_date.isoformat(),
             'status': expense.status,
-            'submitter': expense.submitter.username,
+            'submitter': expense.submitter.username if expense.submitter else '未知用户',
             'created_at': expense.created_at.isoformat(),
             'approval_comment': expense.approval_comment,
             'files': [{
@@ -1457,8 +1457,8 @@ def export_expenses():
     # 组装导出数据
     records = []
     for e in expenses:
-        submitter_name = e.submitter.username if getattr(e, 'submitter', None) else ''
-        submitter_email = e.submitter.email if getattr(e, 'submitter', None) else ''
+        submitter_name = e.submitter.username if e.submitter else ''
+        submitter_email = e.submitter.email if e.submitter else ''
         records.append({
             'ID': e.id,
             '标题': e.title,
