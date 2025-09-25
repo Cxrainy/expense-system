@@ -1,10 +1,24 @@
-Flask==2.3.3
-SQLAlchemy==2.0.23
+# Flask核心
+Flask==3.0.0
+SQLAlchemy==2.0.25
 Flask-SQLAlchemy==3.1.1
-pandas==2.1.4
-openpyxl==3.1.2
-Pillow==10.1.0
-xlsxwriter==3.1.9
+
+# 数据处理 - 移除pandas，使用原生Python
+# pandas==2.1.4  # 移除：与Python 3.13不兼容
+
+# Excel处理
+openpyxl==3.1.5
+xlsxwriter==3.2.0
+
+# 图像处理
+Pillow==10.2.0
+
+# 图表生成
 pyecharts==2.0.4
-werkzeug>=2.0.0
-gunicorn>=20.1.0
+
+# Web服务器和工具
+werkzeug==3.0.1
+gunicorn==21.2.0
+
+# 兼容性库
+requests==2.31.0

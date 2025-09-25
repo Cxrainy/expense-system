@@ -9,7 +9,7 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 # 新增：导出依赖
-import pandas as pd
+from openpyxl import Workbook
 from io import BytesIO
 from sqlalchemy.orm import joinedload
 # 报表导出依赖
@@ -1476,11 +1476,24 @@ def export_expenses():
             '更新时间': e.updated_at.strftime('%Y-%m-%d %H:%M:%S') if e.updated_at else ''
         })
 
-    # 生成Excel
-    df = pd.DataFrame(records)
+    # 生成Excel (使用openpyxl替代pandas)
     output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='报销数据')
+    wb = Workbook()
+    ws = wb.active
+    ws.title = '报销数据'
+    
+    # 写入表头
+    if records:
+        headers = list(records[0].keys())
+        for col, header in enumerate(headers, 1):
+            ws.cell(row=1, column=col, value=header)
+        
+        # 写入数据
+        for row, record in enumerate(records, 2):
+            for col, value in enumerate(record.values(), 1):
+                ws.cell(row=row, column=col, value=value)
+    
+    wb.save(output)
     output.seek(0)
 
     # 生成文件名
